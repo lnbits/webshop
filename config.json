@@ -1,0 +1,23 @@
+{
+  "name": "WebShop",
+  "short_description": "Embedible web-shop",
+  "tile": "/webshop/static/image/webshop.png",
+  "version": "0.0.7",
+  "min_lnbits_version": "1.1.0",
+  "contributors": [
+    {
+      "name": "LNbits community",
+      "uri": "https://t.me/lnbits",
+      "role": "Emotional support"
+    }
+  ],
+  "images": [
+    {
+      "uri": "https://raw.githubusercontent.com/lnbits/webshop/main/static/image/1.png",
+      "link": "https://www.youtube.com/embed/SkkIwO_X4i4?si=9JJh1Fc6GfHDZK6b"
+    }
+  ],
+  "description_md": "https://raw.githubusercontent.com/lnbits/webshop/main/description.md",
+  "terms_and_conditions_md": "https://raw.githubusercontent.com/lnbits/webshop/main/toc.md",
+  "license": "MIT"
+}
