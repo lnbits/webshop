@@ -9,9 +9,7 @@ from .tasks import wait_for_paid_invoices
 from .views import webshop_generic_router
 from .views_api import webshop_api_router
 
-webshop_ext: APIRouter = APIRouter(
-    prefix="/webshop", tags=["WebShop"]
-)
+webshop_ext: APIRouter = APIRouter(prefix="/webshop", tags=["WebShop"])
 webshop_ext.include_router(webshop_generic_router)
 webshop_ext.include_router(webshop_api_router)
 

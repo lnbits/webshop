@@ -1,1526 +1,1663 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ public_page_name }}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-  {% set primary_color = shop.get('primary_color', '#1c56ac') %}
-  {% set secondary_color = shop.get('secondary_color', '#0bb6d5') %}
-  <style>
-    :root {
-      --primary: {{ primary_color }};
-      --secondary: {{ secondary_color }};
-      --bg: #f6f7f9;
-      --panel: #ffffff;
-      --ink: #0f172a;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --shadow-strong: none;
-      --shadow-soft: none;
-      --radius-lg: 8px;
-      --radius-md: 6px;
-      --radius-sm: 4px;
-      color-scheme: light;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: "Manrope", system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-    .page {
-      width: 100%;
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 5px 5px 5px;
-    }
-    .filters {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .filters-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    button {
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: 700;
-      transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
-    }
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      box-shadow: none;
-    }
-    .btn-ghost {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      color: var(--ink);
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      box-shadow: none;
-    }
-    .btn-ghost:disabled,
-    .btn-primary:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .btn-chip {
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      background: #f4f5f7;
-      border: 1px solid var(--border);
-      color: var(--ink);
-      font-weight: 600;
-      font-size: 14px;
-      box-shadow: none;
-    }
-    .btn-chip.is-active {
-      background: #e8edf2;
-      border-color: var(--primary);
-      color: #0b1222;
-      box-shadow: none;
-    }
-    .btn-icon {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .section {
-      margin-top: 5px;
-    }
-    .filters {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .tag-scroll {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
-    }
-    .search-box {
-      flex: 1;
-      min-width: 240px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #fff;
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
-      box-shadow: none;
-    }
-    .search-box input {
-      border: none;
-      outline: none;
-      width: 100%;
-      font-size: 15px;
-      background: transparent;
-      color: var(--ink);
-    }
-    .grid {
-      display: grid;
-      gap: 14px;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      margin-top: 16px;
-    }
-    .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin: 20px 0 8px;
-    }
-    .pager-btn {
-      min-width: 34px;
-      height: 34px;
-      padding: 0 10px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--ink);
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-    }
-    .pager-btn.is-active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-    .pager-btn:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-    .product-card {
-      background: #fff;
-      border-radius: var(--radius-sm);
-      border: 1px solid #e4e7eb;
-      box-shadow: none;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      transition: none;
-    }
-    .product-thumb {
-      position: relative;
-      padding-top: 68%;
-      background: #f3f4f6;
-      background-size: cover;
-      background-position: center;
-    }
-    .tag-label {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #0f172a;
-      padding: 7px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 700;
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      box-shadow: none;
-    }
-    .product-body {
-      padding: 12px 12px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-    }
-    .title {
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.3;
-      color: var(--ink);
-    }
-    .description {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.45;
-      max-height: 3.1em;
-      overflow: hidden;
-    }
-    .meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-weight: 700;
-      color: var(--ink);
-    }
-    .price {
-      font-size: 18px;
-    }
-    .stock {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .card-actions {
-      display: flex;
-      gap: 8px;
-      padding: 0 14px 14px;
-      margin-top: auto;
-    }
-    .card-actions .btn-primary {
-      flex: 1;
-      justify-content: center;
-    }
-    .btn-ghost.is-secondary {
-      color: var(--primary);
-      border-color: color-mix(in srgb, var(--primary) 40%, #dfe5f2 60%);
-      background: color-mix(in srgb, var(--primary) 10%, #fff 90%);
-    }
-    .badge {
-      background: color-mix(in srgb, var(--primary) 14%, #fff 86%);
-      color: var(--ink);
-      padding: 6px 8px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 700;
-      border: 1px solid color-mix(in srgb, var(--primary) 32%, #e3e7ef 68%);
-    }
-    .error {
-      margin-top: 14px;
-      padding: 14px 16px;
-      background: #fff5f5;
-      color: #7f1d1d;
-      border: 1px solid #fca5a5;
-      border-radius: var(--radius-md);
-      box-shadow: none;
-    }
-    .empty {
-      text-align: center;
-      padding: 60px 20px;
-      background: #fff;
-      border-radius: var(--radius-lg);
-      border: 1px dashed var(--border);
-      color: var(--muted);
-      box-shadow: none;
-      margin-top: 12px;
-    }
-    .loader {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      border: 6px solid #e5e7eb;
-      border-top-color: var(--primary);
-      animation: spin 1s linear infinite;
-      margin: 40px auto 20px;
-    }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ public_page_name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    {% set primary_color = shop.get('primary_color', '#1c56ac') %} {% set
+    secondary_color = shop.get('secondary_color', '#0bb6d5') %} {% set
+    background_color = shop.get('background_color', '#f6f7f9') %}
+    <style>
+        :root {
+          --primary: {{ primary_color }};
+          --secondary: {{ secondary_color }};
+          --bg: {{ background_color }};
+          --panel: #ffffff;
+          --ink: #0f172a;
+          --muted: #6b7280;
+          --border: #e5e7eb;
+          --shadow-strong: none;
+          --shadow-soft: none;
+          --radius-lg: 8px;
+          --radius-md: 6px;
+          --radius-sm: 4px;
+          color-scheme: light;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: "Manrope", system-ui, -apple-system, sans-serif;
+          background: var(--bg);
+          color: var(--ink);
+          min-height: 100vh;
+          -webkit-font-smoothing: antialiased;
+        }
+        a {
+          color: inherit;
+          text-decoration: none;
+        }
+        .page {
+          width: 100%;
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 5px 5px 5px;
+        }
+        .filters {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .filters-row {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        button {
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          font-weight: 700;
+          transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
+        }
+        .btn-primary {
+          background: var(--primary);
+          color: #fff;
+          padding: 10px 14px;
+          border-radius: var(--radius-sm);
+          box-shadow: none;
+        }
+        .btn-ghost {
+          background: #f8fafc;
+          border: 1px solid var(--border);
+          color: var(--ink);
+          padding: 10px 14px;
+          border-radius: var(--radius-sm);
+          box-shadow: none;
+        }
+        .btn-ghost:disabled,
+        .btn-primary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .btn-chip {
+          padding: 10px 14px;
+          border-radius: var(--radius-sm);
+          background: #f4f5f7;
+          border: 1px solid var(--border);
+          color: var(--ink);
+          font-weight: 600;
+          font-size: 14px;
+          box-shadow: none;
+        }
+        .btn-chip.is-active {
+          background: #e8edf2;
+          border-color: var(--primary);
+          color: #0b1222;
+          box-shadow: none;
+        }
+        .btn-icon {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .section {
+          margin-top: 5px;
+        }
+        .filters {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .tag-scroll {
+          display: flex;
+          gap: 10px;
+          overflow-x: auto;
+          padding-bottom: 4px;
+          scrollbar-width: thin;
+        }
+        .search-box {
+          flex: 1;
+          min-width: 240px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: #fff;
+          border: 1px solid var(--border);
+          padding: 10px 12px;
+          border-radius: var(--radius-sm);
+          box-shadow: none;
+        }
+        .search-box input {
+          border: none;
+          outline: none;
+          width: 100%;
+          font-size: 15px;
+          background: transparent;
+          color: var(--ink);
+        }
+        .grid {
+          display: grid;
+          gap: 14px;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          margin-top: 16px;
+        }
+        .pagination {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin: 20px 0 8px;
+        }
+        .pager-btn {
+          min-width: 34px;
+          height: 34px;
+          padding: 0 10px;
+          border-radius: 50%;
+          border: 1px solid var(--border);
+          background: #fff;
+          color: var(--ink);
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+        }
+        .pager-btn.is-active {
+          background: var(--primary);
+          color: #fff;
+          border-color: var(--primary);
+        }
+        .pager-btn:disabled {
+          opacity: 0.4;
+          cursor: default;
+        }
+        .product-card {
+          background: #fff;
+          border-radius: var(--radius-sm);
+          border: 1px solid #e4e7eb;
+          box-shadow: none;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          transition: none;
+        }
+        .product-thumb {
+          position: relative;
+          padding-top: 68%;
+          background: #f3f4f6;
+          background-size: cover;
+          background-position: center;
+        }
+        .tag-label {
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          background: rgba(255, 255, 255, 0.9);
+          color: #0f172a;
+          padding: 7px 10px;
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          font-weight: 700;
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          box-shadow: none;
+        }
+        .product-body {
+          padding: 12px 12px 6px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex: 1;
+        }
+        .title {
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 1.3;
+          color: var(--ink);
+        }
+        .description {
+          font-size: 14px;
+          color: var(--muted);
+          line-height: 1.45;
+          max-height: 3.1em;
+          overflow: hidden;
+        }
+        .meta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          font-weight: 700;
+          color: var(--ink);
+        }
+        .price {
+          font-size: 18px;
+        }
+        .stock {
+          font-size: 12px;
+          color: var(--muted);
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .card-actions {
+          display: flex;
+          gap: 8px;
+          padding: 0 14px 14px;
+          margin-top: auto;
+        }
+        .card-actions .btn-primary {
+          flex: 1;
+          justify-content: center;
+        }
+        .btn-ghost.is-secondary {
+          color: var(--primary);
+          border-color: color-mix(in srgb, var(--primary) 40%, #dfe5f2 60%);
+          background: color-mix(in srgb, var(--primary) 10%, #fff 90%);
+        }
+        .badge {
+          background: color-mix(in srgb, var(--primary) 14%, #fff 86%);
+          color: var(--ink);
+          padding: 6px 8px;
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          font-weight: 700;
+          border: 1px solid color-mix(in srgb, var(--primary) 32%, #e3e7ef 68%);
+        }
+        .error {
+          margin-top: 14px;
+          padding: 14px 16px;
+          background: #fff5f5;
+          color: #7f1d1d;
+          border: 1px solid #fca5a5;
+          border-radius: var(--radius-md);
+          box-shadow: none;
+        }
+        .empty {
+          text-align: center;
+          padding: 60px 20px;
+          background: #fff;
+          border-radius: var(--radius-lg);
+          border: 1px dashed var(--border);
+          color: var(--muted);
+          box-shadow: none;
+          margin-top: 12px;
+        }
+        .loader {
+          width: 54px;
+          height: 54px;
+          border-radius: 50%;
+          border: 6px solid #e5e7eb;
+          border-top-color: var(--primary);
+          animation: spin 1s linear infinite;
+          margin: 40px auto 20px;
+        }
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+          z-index: 50;
+          opacity: 0;
+          pointer-events: none;
+        transition: opacity 160ms ease;
       }
-    }
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 50;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 160ms ease;
-    }
-    .modal.is-visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .modal-card {
-      background: #fff;
-      border-radius: var(--radius-lg);
-      width: min(960px, 100%);
-      max-height: 80vh;
-      overflow: hidden;
-      box-shadow: none;
-      position: relative;
-      display: grid;
-      grid-template-columns: 1.1fr 1fr;
-    }
-    .modal-close {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(15, 23, 42, 0.05);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-size: 16px;
-      color: var(--ink);
-    }
-    .modal-media {
-      background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, #f8fafc 88%), color-mix(in srgb, var(--secondary) 14%, #ffffff 86%));
-      display: grid;
-      place-items: center;
-      position: relative;
-      padding: 14px;
-    }
-    .modal-media img {
-      width: 100%;
-      max-height: 420px;
-      object-fit: contain;
-      border-radius: 16px;
-      box-shadow: none;
-      background: #fff;
-    }
-    .slide-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.9);
-      color: var(--ink);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-size: 18px;
-      cursor: pointer;
-      transition: background 120ms ease;
-    }
-    .slide-nav:hover {
-      background: #fff;
-    }
-    .slide-nav.prev {
-      left: 12px;
-    }
-    .slide-nav.next {
-      right: 12px;
-    }
-    .slide-nav:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-    .slide-indicator {
-      position: absolute;
-      bottom: 10px;
-      right: 12px;
-      background: rgba(0, 0, 0, 0.6);
-      color: #fff;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      letter-spacing: 0.04em;
-    }
-    .modal-body {
-      padding: 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .tag-set {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .pill-outline {
-      border: 1px solid var(--border);
-      padding: 6px 10px;
-      border-radius: var(--radius-lg);
-      font-weight: 700;
-      font-size: 12px;
-      background: #f9fafb;
-    }
-    .modal-footer {
-      margin-top: auto;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .cart-fab {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      background: var(--ink);
-      color: #fff;
-      padding: 14px 16px;
-      border-radius: 999px;
-      box-shadow: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 20;
-    }
-    .cart-count {
-      background: var(--secondary);
-      color: #0f172a;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-    .cart-list {
-      margin: 16px 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      max-height: 320px;
-      overflow: auto;
-    }
-    .cart-modal-card {
-      width: min(920px, 100%);
-      grid-template-columns: 1fr;
-      display: flex;
-      flex-direction: column;
-    }
-    .cart-modal-card .modal-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      overflow: hidden;
-    }
-    .checkout-content {
-      flex: 1;
-      display: flex;
-      position: relative;
-    }
-    .checkout-pane {
-      padding-top: 6px;
-      flex: 1 1 auto;
-      min-height: 0;
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .checkout-pane .scrollable {
-      max-height: none;
-    }
-    .pane-body {
-      flex: 1;
-      overflow: auto;
-    }
-    .cart-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .checkout-tabs {
-      display: flex;
-      gap: 8px;
-      margin: 8px 0 6px;
-    }
-    .tab-btn {
-      padding: 8px 14px;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--ink);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-    }
-    .tab-btn.is-active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-    .cart-footer-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .cart-total {
-      font-weight: 800;
-      font-size: 18px;
-    }
-    .checkout-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .form-grid {
-      display: grid;
-      gap: 10px;
-    }
-    .form-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-weight: 600;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .form-field input,
-    .form-field textarea {
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      font-size: 14px;
-      font-family: inherit;
-      background: #fff;
-      color: var(--ink);
-    }
-    .form-field textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-    .pay-methods {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .pay-pill {
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-weight: 700;
-      color: var(--ink);
-    }
-    .pay-pill.is-active {
-      background: color-mix(in srgb, var(--secondary) 40%, #fff 60%);
-      border-color: var(--secondary);
-      color: #0b1222;
-    }
-    .payment-status {
-      margin-top: 8px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .cart-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 6px;
-      padding: 12px 0;
-      border-bottom: 1px solid #eef1f4;
-    }
-    .cart-row:last-child {
-      border-bottom: none;
-    }
-    .cart-row .qty {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-    }
-    .qty-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #fff;
-      font-weight: 800;
-    }
-    .toast {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      background: var(--ink);
-      color: #fff;
-      padding: 12px 14px;
-      border-radius: 10px;
-      box-shadow: none;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: opacity 160ms ease, transform 160ms ease;
-      z-index: 100;
-      font-weight: 700;
-    }
-    .toast.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    @media (max-width: 980px) {
-      .modal-card {
-        grid-template-columns: 1fr;
-        max-height: 88vh;
+      .modal.is-visible {
+        opacity: 1;
+        pointer-events: auto;
       }
-      .modal-media {
-        max-height: 260px;
-      }
-    }
-    @media (max-width: 640px) {
-      .page {
-        padding: 5px 5px 5px;
-      }
-      .card-actions {
-        flex-direction: column;
-      }
-      .card-actions button {
-        width: 100%;
-      }
-      .cart-fab {
-        left: 16px;
-        right: auto;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="page" >
-    <section class="section">
-      <div class="filters">
-        <div class="filters-row">
-          <div class="tag-scroll" id="tag-list">
-            <button class="btn-chip is-active" data-tag="__all">All</button>
+        .modal-card {
+          background: #fff;
+          border-radius: var(--radius-lg);
+          width: min(960px, 100%);
+          max-height: 80vh;
+          overflow: hidden;
+          box-shadow: none;
+          position: relative;
+          display: grid;
+          grid-template-columns: 1.1fr 1fr;
+        }
+        .modal-close {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          background: rgba(15, 23, 42, 0.05);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          font-size: 16px;
+          color: var(--ink);
+        }
+        .modal-media {
+          background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, #f8fafc 88%), color-mix(in srgb, var(--secondary) 14%, #ffffff 86%));
+          display: grid;
+          place-items: center;
+          position: relative;
+          padding: 14px;
+        }
+        .modal-media img {
+          width: 100%;
+          max-height: 420px;
+          object-fit: contain;
+          border-radius: 16px;
+          box-shadow: none;
+          background: #fff;
+        }
+        .slide-nav {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          border: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.9);
+          color: var(--ink);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          font-size: 18px;
+          cursor: pointer;
+          transition: background 120ms ease;
+        }
+        .slide-nav:hover {
+          background: #fff;
+        }
+        .slide-nav.prev {
+          left: 12px;
+        }
+        .slide-nav.next {
+          right: 12px;
+        }
+        .slide-nav:disabled {
+          opacity: 0.5;
+          cursor: default;
+        }
+        .slide-indicator {
+          position: absolute;
+          bottom: 10px;
+          right: 12px;
+          background: rgba(0, 0, 0, 0.6);
+          color: #fff;
+          padding: 4px 8px;
+          border-radius: 999px;
+          font-size: 12px;
+          letter-spacing: 0.04em;
+        }
+        .modal-body {
+          padding: 22px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .tag-set {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .pill-outline {
+          border: 1px solid var(--border);
+          padding: 6px 10px;
+          border-radius: var(--radius-lg);
+          font-weight: 700;
+          font-size: 12px;
+          background: #f9fafb;
+        }
+        .modal-footer {
+          margin-top: auto;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .cart-count {
+          background: var(--secondary);
+          color: #0f172a;
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-weight: 800;
+          border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .cart-list {
+          margin: 16px 0;
+          border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          max-height: 320px;
+          overflow: auto;
+        }
+        .cart-modal-card {
+          width: min(920px, 100%);
+          grid-template-columns: 1fr;
+          display: flex;
+          flex-direction: column;
+        }
+        .cart-modal-card .modal-body {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          overflow: hidden;
+        }
+        .checkout-content {
+          flex: 1;
+          display: flex;
+          position: relative;
+        }
+        .checkout-pane {
+          padding-top: 6px;
+          flex: 1 1 auto;
+          min-height: 0;
+          display: none;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .checkout-pane .scrollable {
+          max-height: none;
+        }
+        .pane-body {
+          flex: 1;
+          overflow: auto;
+        }
+        .cart-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .checkout-tabs {
+          display: flex;
+          gap: 8px;
+          margin: 8px 0 6px;
+        }
+        .tab-btn {
+          padding: 8px 14px;
+          border: 1px solid var(--border);
+          background: #fff;
+          color: var(--ink);
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+        }
+        .tab-btn.is-active {
+          background: var(--primary);
+          color: #fff;
+          border-color: var(--primary);
+        }
+        .cart-footer-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-top: 8px;
+        }
+        .cart-total {
+          font-weight: 800;
+          font-size: 18px;
+        }
+        .checkout-actions {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+        .form-grid {
+          display: grid;
+          gap: 10px;
+        }
+        .form-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          font-weight: 600;
+          color: var(--muted);
+          font-size: 13px;
+        }
+        .form-field input,
+        .form-field textarea {
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          padding: 10px 12px;
+          font-size: 14px;
+          font-family: inherit;
+          background: #fff;
+          color: var(--ink);
+        }
+        .form-field textarea {
+          min-height: 80px;
+          resize: vertical;
+        }
+        .pay-methods {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .pay-pill {
+          padding: 10px 12px;
+          border: 1px solid var(--border);
+          background: #fff;
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          font-weight: 700;
+          color: var(--ink);
+        }
+        .pay-pill.is-active {
+          background: color-mix(in srgb, var(--secondary) 40%, #fff 60%);
+          border-color: var(--secondary);
+          color: #0b1222;
+        }
+        .payment-status {
+          margin-top: 8px;
+          font-size: 13px;
+          color: var(--muted);
+        }
+        .invoice-box {
+          margin-top: 12px;
+          display: grid;
+          place-items: center;
+          gap: 8px;
+          text-align: center;
+        }
+        .invoice-box img {
+          max-width: 220px;
+        }
+        .cart-row {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 6px;
+          padding: 12px 0;
+          border-bottom: 1px solid #eef1f4;
+        }
+        .cart-row:last-child {
+          border-bottom: none;
+        }
+        .cart-row .qty {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 700;
+        }
+        .qty-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          background: #fff;
+          font-weight: 800;
+        }
+        .toast {
+          position: fixed;
+          top: 16px;
+          right: 16px;
+          background: var(--ink);
+          color: #fff;
+          padding: 12px 14px;
+          border-radius: 10px;
+          box-shadow: none;
+          opacity: 0;
+          transform: translateY(-6px);
+          transition: opacity 160ms ease, transform 160ms ease;
+          z-index: 100;
+          font-weight: 700;
+        }
+        .toast.is-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        @media (max-width: 980px) {
+          .modal-card {
+            grid-template-columns: 1fr;
+            max-height: 88vh;
+          }
+          .modal-media {
+            max-height: 260px;
+          }
+        }
+        @media (max-width: 640px) {
+          .page {
+            padding: 5px 5px 5px;
+          }
+          .card-actions {
+            flex-direction: column;
+          }
+          .card-actions button {
+            width: 100%;
+          }
+        }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="section">
+        <div class="filters">
+          <div class="filters-row">
+            <div class="tag-scroll" id="tag-list">
+              <button class="btn-chip is-active" data-tag="__all">All</button>
+            </div>
+            <div class="search-box">
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="#6b7280"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="8" cy="8" r="5.4"></circle>
+                <path d="m12 12 4 4"></path>
+              </svg>
+              <input
+                type="search"
+                id="search"
+                placeholder="Search products, tags, descriptions..."
+              />
+            </div>
+            <button class="btn-ghost btn-icon" id="open-cart">
+              <span>Cart</span>
+              <span class="cart-count" id="cart-count">0</span>
+            </button>
           </div>
-          <div class="search-box">
-            <svg width="18" height="18" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="8" cy="8" r="5.4"></circle>
-              <path d="m12 12 4 4"></path>
-            </svg>
-            <input type="search" id="search" placeholder="Search products, tags, descriptions..." />
-          </div>
-          <button class="btn-ghost btn-icon" id="open-cart">
-            <span>Cart</span>
-            <span class="cart-count" id="cart-count">0</span>
+        </div>
+        <div id="error" class="error" style="display: none"></div>
+        <div
+          id="loader"
+          class="loader"
+          aria-label="Loading products"
+          style="display: none"
+        ></div>
+        <div id="empty" class="empty" style="display: none">
+          No products to show yet. Keep items active in Inventory to display
+          them here.
+        </div>
+        <div id="grid" class="grid" aria-live="polite"></div>
+        <div id="pagination" class="pagination" aria-label="Pagination"></div>
+      </section>
+    </div>
+
+    <div class="modal" id="product-modal">
+      <div class="modal-card">
+        <button class="modal-close" data-close="product">×</button>
+        <div class="modal-media">
+          <button
+            class="slide-nav prev"
+            id="modal-prev"
+            aria-label="Previous image"
+          >
+            ‹
           </button>
+          <img src="" alt="Product preview" id="modal-image" />
+          <button
+            class="slide-nav next"
+            id="modal-next"
+            aria-label="Next image"
+          >
+            ›
+          </button>
+          <div class="slide-indicator" id="modal-indicator"></div>
         </div>
-      </div>
-      <div id="error" class="error" style="display:none;"></div>
-      <div id="loader" class="loader" aria-label="Loading products" style="display:none;"></div>
-      <div id="empty" class="empty" style="display:none;">
-        No products to show yet. Keep items active in Inventory to display them here.
-      </div>
-      <div id="grid" class="grid" aria-live="polite"></div>
-      <div id="pagination" class="pagination" aria-label="Pagination"></div>
-    </section>
-  </div>
-
-  <button class="cart-fab btn-icon" id="cart-fab">
-    <span>Cart</span>
-    <span class="cart-count" id="fab-count">0</span>
-  </button>
-
-  <div class="modal" id="product-modal">
-    <div class="modal-card">
-      <button class="modal-close" data-close="product">×</button>
-      <div class="modal-media">
-        <button class="slide-nav prev" id="modal-prev" aria-label="Previous image">‹</button>
-        <img src="" alt="Product preview" id="modal-image" />
-        <button class="slide-nav next" id="modal-next" aria-label="Next image">›</button>
-        <div class="slide-indicator" id="modal-indicator"></div>
-      </div>
-      <div class="modal-body">
-        <div class="badge" id="modal-price"></div>
-        <h2 class="title" id="modal-title"></h2>
-        <p class="description" id="modal-description"></p>
-        <div class="tag-set" id="modal-tags"></div>
-        <div class="tag-set">
-          <span class="pill-outline" id="modal-stock"></span>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-primary" id="modal-add">Add to cart</button>
+        <div class="modal-body">
+          <div class="badge" id="modal-price"></div>
+          <h2 class="title" id="modal-title"></h2>
+          <p class="description" id="modal-description"></p>
+          <div class="tag-set" id="modal-tags"></div>
+          <div class="tag-set">
+            <span class="pill-outline" id="modal-stock"></span>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-primary" id="modal-add">Add to cart</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="modal" id="cart-modal">
-    <div class="modal-card cart-modal-card">
-      <button class="modal-close" data-close="cart">×</button>
-      <div class="modal-body">
-        <div class="cart-header">
-          <div>
-            <h3 style="margin:0;">Cart</h3>
-            <div class="text-caption" style="color:var(--muted); font-size:13px;">Review your items and checkout.</div>
-          </div>
-          <span class="badge" id="cart-summary">0 items</span>
-        </div>
-
-        <div class="checkout-tabs" id="checkout-tabs">
-          <button class="tab-btn is-active" data-step="0">Cart</button>
-          <button class="tab-btn" data-step="1">Details</button>
-          <button class="tab-btn" data-step="2">Payment</button>
-        </div>
-
-        <div class="checkout-content">
-          <div class="checkout-pane" id="pane-cart" data-step="0">
-            <div class="pane-body">
-              <div class="cart-list scrollable" id="cart-items"></div>
-            </div>
-            <div class="cart-footer-row">
-              <div class="cart-total" id="cart-total">Total: 0</div>
-              <div class="checkout-actions">
-                <button class="btn-ghost" id="checkout-next">Checkout</button>
+    <div class="modal" id="cart-modal">
+      <div class="modal-card cart-modal-card">
+        <button class="modal-close" data-close="cart">×</button>
+        <div class="modal-body">
+          <div class="cart-header">
+            <div>
+              <h3 style="margin: 0">Cart</h3>
+              <div
+                class="text-caption"
+                style="color: var(--muted); font-size: 13px"
+              >
+                Review your items and checkout.
               </div>
             </div>
+            <span class="badge" id="cart-summary">0 items</span>
           </div>
 
-          <div class="checkout-pane" id="pane-details" data-step="1" style="display:none;">
-            <div class="pane-body">
-              <div class="form-grid">
-                <label class="form-field">
-                  <span>Address (optional)</span>
-                  <textarea id="detail-address" placeholder="Shipping address"></textarea>
-                </label>
-                <label class="form-field">
-                  <span>Email (optional)</span>
-                  <input type="email" id="detail-email" placeholder="you@example.com" />
-                </label>
-                <label class="form-field">
-                  <span>Phone / number (optional)</span>
-                  <input type="text" id="detail-number" placeholder="+1 555..." />
-                </label>
-              </div>
-            </div>
-            <div class="cart-footer-row">
-              <div class="cart-total" id="cart-total-details"></div>
-              <div class="checkout-actions">
-                <button class="btn-ghost" id="details-back">Back</button>
-                <button class="btn-primary" id="details-next">Continue</button>
-              </div>
-            </div>
+          <div class="checkout-tabs" id="checkout-tabs">
+            <button class="tab-btn is-active" data-step="0">Cart</button>
+            <button class="tab-btn" data-step="1">Details</button>
+            <button class="tab-btn" data-step="2">Payment</button>
           </div>
 
-          <div class="checkout-pane" id="pane-payment" data-step="2" style="display:none;">
-            <div class="pane-body">
-              <div class="payment-options">
-                <div class="text-caption" style="margin-bottom:6px; color:var(--muted);">Choose a payment method</div>
-                <div class="pay-methods">
-                  <button class="pay-pill" id="method-bitcoin">Bitcoin / Lightning</button>
-                  <button class="pay-pill" id="method-fiat">Fiat (Stripe)</button>
+          <div class="checkout-content">
+            <div class="checkout-pane" id="pane-cart" data-step="0">
+              <div class="pane-body">
+                <div class="cart-list scrollable" id="cart-items"></div>
+              </div>
+              <div class="cart-footer-row">
+                <div class="cart-total" id="cart-total">Total: 0</div>
+                <div class="checkout-actions">
+                  <button class="btn-ghost" id="checkout-next">Checkout</button>
                 </div>
               </div>
             </div>
-            <div class="cart-footer-row">
-              <div class="cart-total" id="cart-total-payment">Total: <span id="cart-total-payval"></span></div>
-              <div class="checkout-actions">
-                <button class="btn-ghost" id="payment-back">Back</button>
-                <button class="btn-primary" id="pay-button">Pay now</button>
+
+            <div
+              class="checkout-pane"
+              id="pane-details"
+              data-step="1"
+              style="display: none"
+            >
+              <div class="pane-body">
+                <div class="form-grid">
+                  <label class="form-field">
+                    <span>Address (optional)</span>
+                    <textarea
+                      id="detail-address"
+                      placeholder="Shipping address"
+                    ></textarea>
+                  </label>
+                  <label class="form-field">
+                    <span>Email (optional)</span>
+                    <input
+                      type="email"
+                      id="detail-email"
+                      placeholder="you@example.com"
+                    />
+                  </label>
+                  <label class="form-field">
+                    <span>Phone / number (optional)</span>
+                    <input
+                      type="text"
+                      id="detail-number"
+                      placeholder="+1 555..."
+                    />
+                  </label>
+                </div>
+              </div>
+              <div class="cart-footer-row">
+                <div class="cart-total" id="cart-total-details"></div>
+                <div class="checkout-actions">
+                  <button class="btn-ghost" id="details-back">Back</button>
+                  <button class="btn-primary" id="details-next">
+                    Continue
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="payment-status" id="payment-status">Select a method to continue.</div>
+
+            <div
+              class="checkout-pane"
+              id="pane-payment"
+              data-step="2"
+              style="display: none"
+            >
+              <div class="pane-body">
+                <div class="payment-options">
+                  <div
+                    class="text-caption"
+                    style="margin-bottom: 6px; color: var(--muted)"
+                  >
+                    Choose a payment method
+                  </div>
+                  <div class="pay-methods">
+                    <button class="pay-pill" id="method-bitcoin">
+                      Bitcoin / Lightning
+                    </button>
+                    <button class="pay-pill" id="method-fiat">
+                      Fiat (Stripe)
+                    </button>
+                  </div>
+                </div>
+                <div class="invoice-box">
+                  <img
+                    id="invoice-qr-img"
+                    alt="Payment QR"
+                    title="Click to copy invoice"
+                  />
+                  <div class="payment-status" id="payment-status">
+                    Select a method to continue.
+                  </div>
+                </div>
+              </div>
+              <div class="cart-footer-row">
+                <div class="cart-total" id="cart-total-payment">
+                  Total: <span id="cart-total-payval"></span>
+                </div>
+                <div class="checkout-actions">
+                  <button class="btn-ghost" id="payment-back">Back</button>
+                  <button class="btn-primary" id="pay-button">Pay now</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="toast" id="toast"></div>
+    <div class="toast" id="toast"></div>
 
-  <script>
-    const SHOP_DATA = {{ shop | tojson | safe if shop else '{}' }};
-    const SHOP_ID = '{{ shop_id }}';
-    const PLACEHOLDER_IMG = 'https://dummyimage.com/900x700/f3f4f6/9ca3af.png&text=No+Image';
+    <script>
+      const SHOP_DATA = {{ shop | tojson | safe if shop else '{}' }};
+      const SHOP_ID = '{{ shop_id }}';
+      const PLACEHOLDER_IMG = 'https://dummyimage.com/900x700/f3f4f6/9ca3af.png&text=No+Image';
 
-    (() => {
-      const state = {
-        shop: SHOP_DATA || {},
-        inventoryId:
-          (SHOP_DATA && SHOP_DATA.inventory_id) ||
-          new URLSearchParams(window.location.search).get('inventory_id') ||
-          '',
-        products: [],
-        filtered: [],
-        tags: ['__all'],
-        search: '',
-        selectedTag: '__all',
-        loading: false,
-        error: '',
-        cart: [],
-        focusedItem: null,
-        modalImages: [],
-        modalIndex: 0,
-        page: 1,
-        pageSize: 20,
-        checkoutStep: 0,
-        checkoutDetails: {
-          address: '',
-          email: '',
-          number: ''
-        },
-        checkoutMethod: ''
-      };
 
-      const els = {
-        grid: document.getElementById('grid'),
-        search: document.getElementById('search'),
-        error: document.getElementById('error'),
-        empty: document.getElementById('empty'),
-        loader: document.getElementById('loader'),
-        tagList: document.getElementById('tag-list'),
-        cartCount: document.getElementById('cart-count'),
-        fabCount: document.getElementById('fab-count'),
-        cartFab: document.getElementById('cart-fab'),
-        openCart: document.getElementById('open-cart'),
-        cartModal: document.getElementById('cart-modal'),
-        productModal: document.getElementById('product-modal'),
-        toast: document.getElementById('toast'),
-        pagination: document.getElementById('pagination'),
-        modalImage: document.getElementById('modal-image'),
-        modalPrice: document.getElementById('modal-price'),
-        modalTitle: document.getElementById('modal-title'),
-        modalDescription: document.getElementById('modal-description'),
-        modalTags: document.getElementById('modal-tags'),
-        modalStock: document.getElementById('modal-stock'),
-        modalAdd: document.getElementById('modal-add'),
-        modalPrev: document.getElementById('modal-prev'),
-        modalNext: document.getElementById('modal-next'),
-        modalIndicator: document.getElementById('modal-indicator'),
-        cartItems: document.getElementById('cart-items'),
-        cartSummary: document.getElementById('cart-summary'),
-        cartTotal: document.getElementById('cart-total'),
-        cartTotalDetails: document.getElementById('cart-total-details'),
-        checkoutTabs: document.getElementById('checkout-tabs'),
-        paneCart: document.getElementById('pane-cart'),
-        paneDetails: document.getElementById('pane-details'),
-        panePayment: document.getElementById('pane-payment'),
-        checkoutNext: document.getElementById('checkout-next'),
-        detailsNext: document.getElementById('details-next'),
-        detailsBack: document.getElementById('details-back'),
-        paymentBack: document.getElementById('payment-back'),
-        payButton: document.getElementById('pay-button'),
-        detailAddress: document.getElementById('detail-address'),
-        detailEmail: document.getElementById('detail-email'),
-        detailNumber: document.getElementById('detail-number'),
-        methodBitcoin: document.getElementById('method-bitcoin'),
-        methodFiat: document.getElementById('method-fiat'),
-        paymentStatus: document.getElementById('payment-status')
-        ,
-        cartTotalPayval: document.getElementById('cart-total-payval')
-      };
-
-      function setTheme() {
-        const primary = state.shop.primary_color || '{{ primary_color }}';
-        const secondary = state.shop.secondary_color || '{{ secondary_color }}';
-        document.documentElement.style.setProperty('--primary', primary);
-        document.documentElement.style.setProperty('--secondary', secondary);
-      }
-
-      function toast(message) {
-        if (!els.toast) return;
-        els.toast.textContent = message;
-        els.toast.classList.add('is-visible');
-        setTimeout(() => els.toast.classList.remove('is-visible'), 2200);
-      }
-
-      function formatAmount(amount) {
-        const numeric = Number(amount) || 0;
-        return new Intl.NumberFormat(undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2
-        }).format(numeric);
-      }
-
-      function cartTotalValue() {
-        return state.cart.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0);
-      }
-
-      function currencyLabel() {
-        return state.shop.currency || 'sat';
-      }
-
-      function priceLabel(item) {
-        return `${formatAmount(item.price)} ${currencyLabel()}`;
-      }
-
-      function stockLabel(item) {
-        const stock = item.quantity_in_stock;
-        if (stock === null || stock === undefined) return 'in stock';
-        return `${stock} in stock`;
-      }
-
-      function parseTags(raw) {
-        if (!raw) return [];
-        if (Array.isArray(raw)) return raw.map(t => normalizeTag(t, false)).filter(Boolean);
-        const str = String(raw).trim();
-        if (!str) return [];
-        try {
-          const parsed = JSON.parse(str);
-          if (Array.isArray(parsed)) return parsed.map(t => normalizeTag(t, false)).filter(Boolean);
-        } catch (err) {
-          /* not JSON */
-        }
-        return str
-          .split(',')
-          .map(t => normalizeTag(t, false))
-          .filter(Boolean);
-      }
-
-      function normalizeTag(tag, toLower = true) {
-        if (tag === undefined || tag === null) return '';
-        const trimmed = String(tag).trim();
-        return toLower ? trimmed.toLowerCase() : trimmed;
-      }
-
-      function parseImages(item) {
-        if (!item || !item.images) return [];
-
-        const toAssetUrl = id => {
-          if (!id) return '';
-          const val = String(id).trim();
-          if (!val) return '';
-          if (val.startsWith('http')) return val;
-          if (val.startsWith('/api/')) return val;
-          return `/api/v1/assets/${val}/binary`;
+      (() => {
+        const state = {
+          shop: SHOP_DATA || {},
+          inventoryId:
+            (SHOP_DATA && SHOP_DATA.inventory_id) ||
+            new URLSearchParams(window.location.search).get('inventory_id') ||
+            '',
+          products: [],
+          filtered: [],
+          tags: ['__all'],
+          search: '',
+          selectedTag: '__all',
+          loading: false,
+          error: '',
+          cart: [],
+          focusedItem: null,
+          modalImages: [],
+          modalIndex: 0,
+          page: 1,
+          pageSize: 20,
+          checkoutStep: 0,
+          checkoutDetails: {
+            address: '',
+            email: '',
+            number: ''
+          },
+          checkoutMethod: '',
+          invoice: null,
+          invoiceSocket: null
         };
 
-        const append = list => list.map(toAssetUrl).filter(Boolean);
+        const els = {
+          grid: document.getElementById('grid'),
+          search: document.getElementById('search'),
+          error: document.getElementById('error'),
+          empty: document.getElementById('empty'),
+          loader: document.getElementById('loader'),
+          tagList: document.getElementById('tag-list'),
+          cartCount: document.getElementById('cart-count'),
+          openCart: document.getElementById('open-cart'),
+          cartModal: document.getElementById('cart-modal'),
+          productModal: document.getElementById('product-modal'),
+          toast: document.getElementById('toast'),
+          pagination: document.getElementById('pagination'),
+          modalImage: document.getElementById('modal-image'),
+          modalPrice: document.getElementById('modal-price'),
+          modalTitle: document.getElementById('modal-title'),
+          modalDescription: document.getElementById('modal-description'),
+          modalTags: document.getElementById('modal-tags'),
+          modalStock: document.getElementById('modal-stock'),
+          modalAdd: document.getElementById('modal-add'),
+          modalPrev: document.getElementById('modal-prev'),
+          modalNext: document.getElementById('modal-next'),
+          modalIndicator: document.getElementById('modal-indicator'),
+          cartItems: document.getElementById('cart-items'),
+          cartSummary: document.getElementById('cart-summary'),
+          cartTotal: document.getElementById('cart-total'),
+          cartTotalDetails: document.getElementById('cart-total-details'),
+          checkoutTabs: document.getElementById('checkout-tabs'),
+          paneCart: document.getElementById('pane-cart'),
+          paneDetails: document.getElementById('pane-details'),
+          panePayment: document.getElementById('pane-payment'),
+          checkoutNext: document.getElementById('checkout-next'),
+          detailsNext: document.getElementById('details-next'),
+          detailsBack: document.getElementById('details-back'),
+          paymentBack: document.getElementById('payment-back'),
+          payButton: document.getElementById('pay-button'),
+          detailAddress: document.getElementById('detail-address'),
+          detailEmail: document.getElementById('detail-email'),
+          detailNumber: document.getElementById('detail-number'),
+          methodBitcoin: document.getElementById('method-bitcoin'),
+          methodFiat: document.getElementById('method-fiat'),
+          paymentStatus: document.getElementById('payment-status'),
+          invoiceQr: document.getElementById('invoice-qr-img'),
+          cartTotalPayval: document.getElementById('cart-total-payval')
+        };
 
-        if (Array.isArray(item.images)) return append(item.images);
-
-        const raw = String(item.images).trim();
-        if (!raw) return [];
-
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) return append(parsed);
-        } catch (err) {
-          /* ignore parse errors */
+        function setTheme() {
+          const primary = state.shop.primary_color || '{{ primary_color }}';
+          const secondary = state.shop.secondary_color || '{{ secondary_color }}';
+          document.documentElement.style.setProperty('--primary', primary);
+          document.documentElement.style.setProperty('--secondary', secondary);
         }
 
-        if (raw.includes('|||')) return append(raw.split('|||'));
-        if (raw.includes(',')) return append(raw.split(','));
-        if (raw.startsWith('data:')) return [raw];
-        return append([raw]);
-      }
-
-      function parseImage(item) {
-        const imgs = parseImages(item);
-        return imgs[0] || '';
-      }
-
-      function renderTags() {
-        if (!els.tagList) return;
-        els.tagList.innerHTML = '';
-        state.tags.forEach(tag => {
-          const btn = document.createElement('button');
-          btn.className = 'btn-chip';
-          btn.dataset.tag = tag;
-          btn.textContent = tag === '__all' ? 'All' : tag;
-          els.tagList.appendChild(btn);
-        });
-        updateTagActive();
-      }
-
-      function updateTagActive() {
-        if (!els.tagList) return;
-        const active = state.selectedTag.toLowerCase();
-        els.tagList.querySelectorAll('button[data-tag]').forEach(btn => {
-          btn.classList.toggle(
-            'is-active',
-            btn.dataset.tag.toLowerCase() === active
-          );
-        });
-      }
-
-      function filterProducts() {
-        const term = state.search.trim().toLowerCase();
-        const activeTag = normalizeTag(state.selectedTag);
-        state.filtered = state.products.filter(item => {
-          const itemTags =
-            item.__tagsLower && Array.isArray(item.__tagsLower)
-              ? item.__tagsLower
-              : parseTags(item.tags).map(t => normalizeTag(t));
-          const matchesTag =
-            activeTag === '__all' || itemTags.includes(activeTag);
-          const haystack = `${item.name || ''} ${item.description || ''} ${item.tags || ''}`.toLowerCase();
-          const matchesSearch = !term || haystack.includes(term);
-          return matchesTag && matchesSearch;
-        });
-        state.page = 1;
-        renderProducts();
-        updateTagActive();
-      }
-
-      function renderProducts() {
-        if (!els.grid) return;
-        els.grid.innerHTML = '';
-        if (state.loading) {
-          els.loader.style.display = 'block';
-          els.empty.style.display = 'none';
-          return;
-        }
-        els.loader.style.display = 'none';
-        if (!state.filtered.length) {
-          els.empty.style.display = 'block';
-          if (els.pagination) els.pagination.style.display = 'none';
-          return;
-        }
-        els.empty.style.display = 'none';
-        const start = (state.page - 1) * state.pageSize;
-        const visible = state.filtered.slice(start, start + state.pageSize);
-        visible.forEach(item => {
-          const card = document.createElement('article');
-          card.className = 'product-card';
-          const imgUrl = parseImage(item);
-          card.innerHTML = `
-            <div class="product-thumb" style="${imgUrl ? `background-image:url('${imgUrl}')` : ''}">
-              ${parseTags(item.tags)[0] ? `<div class="tag-label">${parseTags(item.tags)[0]}</div>` : ''}
-            </div>
-            <div class="product-body">
-              <div class="title">${item.name || 'Unnamed product'}</div>
-              <div class="description">${item.description || 'No description provided yet.'}</div>
-              <div class="meta">
-                <span class="price">${priceLabel(item)}</span>
-                <span class="stock">${stockLabel(item)}</span>
-              </div>
-            </div>
-            <div class="card-actions">
-              <button class="btn-ghost is-secondary" data-view>View</button>
-              <button class="btn-primary" data-add>Add</button>
-            </div>
-          `;
-          card.querySelector('[data-view]').onclick = e => {
-            e.stopPropagation();
-            openProductModal(item);
-          };
-          card.querySelector('[data-add]').onclick = e => {
-            e.stopPropagation();
-            addToCart(item);
-          };
-          card.onclick = e => {
-            if (e.target.dataset.add || e.target.dataset.view) return;
-            openProductModal(item);
-          };
-          els.grid.appendChild(card);
-        });
-        renderPagination();
-      }
-
-      function updateCounts() {
-        const totalVal = cartTotalValue();
-        const total = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-        const totalLabel = `${total} item${total === 1 ? '' : 's'}`;
-        els.cartCount.textContent = total;
-        els.fabCount.textContent = total;
-        els.cartSummary.textContent = totalLabel;
-        els.cartTotal.textContent = `Total: ${formatAmount(
-          totalVal
-        )} ${currencyLabel()}`;
-        if (els.cartTotalDetails) {
-          els.cartTotalDetails.textContent = `Total: ${formatAmount(totalVal)} ${currencyLabel()}`;
-        }
-        updateCheckoutUI();
-      }
-
-      function renderCart() {
-        if (!els.cartItems) return;
-        els.cartItems.innerHTML = '';
-        if (!state.cart.length) {
-          els.cartItems.innerHTML = '<div class="empty" style="margin:8px 0;">Cart is empty. Add a product to get started.</div>';
-          updateCounts();
-          return;
-        }
-        state.cart.forEach(entry => {
-          const row = document.createElement('div');
-          row.className = 'cart-row';
-          row.innerHTML = `
-            <div>
-              <div class="title" style="margin:0 0 4px;font-size:15px;">${entry.name}</div>
-              <div class="stock">${priceLabel(entry)}</div>
-            </div>
-            <div class="qty">
-              <button class="qty-btn" data-dec>-</button>
-              <span>${entry.quantity}</span>
-              <button class="qty-btn" data-inc>+</button>
-            </div>
-          `;
-          row.querySelector('[data-dec]').onclick = () => updateQuantity(entry.id, -1);
-          row.querySelector('[data-inc]').onclick = () => updateQuantity(entry.id, 1);
-          els.cartItems.appendChild(row);
-        });
-        updateCounts();
-      }
-
-      function updateQuantity(id, delta) {
-        const entry = state.cart.find(i => i.id === id);
-        if (!entry) return;
-        const limit =
-          typeof entry.quantity_in_stock === 'number'
-            ? Math.max(entry.quantity_in_stock, 0)
-            : Infinity;
-        entry.quantity = Math.min(Math.max(entry.quantity + delta, 0), limit || 0);
-        if (entry.quantity <= 0) {
-          state.cart = state.cart.filter(i => i.id !== id);
-        }
-        renderCart();
-      }
-
-      function addToCart(item) {
-        const existing = state.cart.find(i => i.id === item.id);
-        const limit =
-          typeof item.quantity_in_stock === 'number'
-            ? Math.max(item.quantity_in_stock, 0)
-            : Infinity;
-        if (existing) {
-          if (existing.quantity >= limit) return;
-          existing.quantity += 1;
-        } else {
-          state.cart.push({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: limit === Infinity ? 1 : Math.min(1, limit),
-            quantity_in_stock: item.quantity_in_stock
-          });
-        }
-        renderCart();
-        toast('Added to cart');
-      }
-
-      function openProductModal(item) {
-        state.focusedItem = item;
-        const images = parseImages(item);
-        state.modalImages = images.length ? images : [PLACEHOLDER_IMG];
-        state.modalIndex = 0;
-        updateModalImage();
-        els.modalTitle.textContent = item.name || 'Untitled product';
-        els.modalDescription.textContent = item.description || 'No description provided yet.';
-        els.modalPrice.textContent = priceLabel(item);
-        els.modalStock.textContent = stockLabel(item);
-        els.modalTags.innerHTML = '';
-        parseTags(item.tags).forEach(tag => {
-          const span = document.createElement('span');
-          span.className = 'pill-outline';
-          span.textContent = tag;
-          els.modalTags.appendChild(span);
-        });
-        els.modalAdd.onclick = () => addToCart(item);
-        els.productModal.classList.add('is-visible');
-      }
-
-      function closeModal(which) {
-        if (which === 'product') els.productModal.classList.remove('is-visible');
-        if (which === 'cart') els.cartModal.classList.remove('is-visible');
-      }
-
-      function updateModalImage() {
-        if (!els.modalImage) return;
-        const total = state.modalImages.length;
-        const current = Math.max(0, Math.min(state.modalIndex, total - 1));
-        state.modalIndex = current;
-        els.modalImage.src = state.modalImages[current] || PLACEHOLDER_IMG;
-        if (els.modalIndicator) {
-          els.modalIndicator.textContent = total > 1 ? `${current + 1} / ${total}` : '';
-        }
-        if (els.modalPrev) els.modalPrev.disabled = total <= 1;
-        if (els.modalNext) els.modalNext.disabled = total <= 1;
-      }
-
-      function changeModalImage(delta) {
-        if (!state.modalImages.length) return;
-        const total = state.modalImages.length;
-        state.modalIndex = (state.modalIndex + delta + total) % total;
-        updateModalImage();
-      }
-
-      function updateCheckoutUI() {
-        const tabs = els.checkoutTabs ? els.checkoutTabs.querySelectorAll('button[data-step]') : [];
-        tabs.forEach(btn => {
-          const step = Number(btn.dataset.step || 0);
-          btn.classList.toggle('is-active', step === state.checkoutStep);
-        });
-
-        if (els.paneCart) els.paneCart.style.display = state.checkoutStep === 0 ? 'flex' : 'none';
-        if (els.paneDetails) els.paneDetails.style.display = state.checkoutStep === 1 ? 'flex' : 'none';
-        if (els.panePayment) els.panePayment.style.display = state.checkoutStep === 2 ? 'flex' : 'none';
-
-        if (els.checkoutNext) {
-          els.checkoutNext.disabled = state.cart.length === 0;
+        function renderInvoice() {
+          if (!state.invoice) return;
+          const text = state.invoice.request || '';
+          if (els.invoiceQr && text) {
+            els.invoiceQr.src = `/api/v1/qrcode/${encodeURIComponent(text)}`;
+            els.invoiceQr.alt = 'Payment QR';
+          }
         }
 
-        const allowBitcoin = state.shop.allow_bitcoin !== false;
-        const allowFiat = state.shop.allow_fiat !== false;
-        if (els.methodBitcoin) {
-          els.methodBitcoin.style.display = allowBitcoin ? 'inline-flex' : 'none';
-          els.methodBitcoin.classList.toggle('is-active', state.checkoutMethod === 'bitcoin');
-        }
-        if (els.methodFiat) {
-          els.methodFiat.style.display = allowFiat ? 'inline-flex' : 'none';
-          els.methodFiat.classList.toggle('is-active', state.checkoutMethod === 'fiat');
-        }
-        if (!allowBitcoin && state.checkoutMethod === 'bitcoin') state.checkoutMethod = '';
-        if (!allowFiat && state.checkoutMethod === 'fiat') state.checkoutMethod = '';
-        if (!allowBitcoin && !allowFiat && els.paymentStatus) {
-          els.paymentStatus.textContent = 'No payment methods enabled for this shop.';
+        function markInvoicePaid() {
+          state.invoice.paid = true;
+          if (els.paymentStatus) els.paymentStatus.textContent = 'Payment received!';
+          toast('Payment received');
+          closeModal('cart');
+          state.cart = [];
+          renderCart();
+          setCheckoutStep(0);
+          if (state.invoiceSocket) {
+            state.invoiceSocket.close();
+            state.invoiceSocket = null;
+          }
         }
 
-        if (els.detailAddress) els.detailAddress.value = state.checkoutDetails.address || '';
-        if (els.detailEmail) els.detailEmail.value = state.checkoutDetails.email || '';
-        if (els.detailNumber) els.detailNumber.value = state.checkoutDetails.number || '';
-
-        const totalVal = cartTotalValue();
-        if (els.cartTotalPayval) {
-          els.cartTotalPayval.textContent = `${formatAmount(totalVal)} ${currencyLabel()}`;
-        }
-        if (els.payButton) {
-          els.payButton.disabled = !state.checkoutMethod || !state.cart.length;
-        }
-      }
-
-      function setCheckoutStep(step) {
-        state.checkoutStep = Math.max(0, Math.min(step, 2));
-        updateCheckoutUI();
-      }
-
-      async function submitCheckout() {
-        if (!state.checkoutMethod) {
-          toast('Select a payment method');
-          return;
-        }
-        if (!state.cart.length) {
-          toast('Cart is empty');
-          return;
-        }
-        if (els.paymentStatus) {
-          els.paymentStatus.textContent = 'Creating order...';
-        }
-        try {
-          const summaryName =
-            state.cart.length === 1
-              ? state.cart[0].name
-              : `${state.cart.length} items`;
-          const payload = {
-            product: summaryName,
-            quantity: state.cart.reduce((sum, item) => sum + item.quantity, 0),
-            address: state.checkoutDetails.address || null,
-            email: state.checkoutDetails.email || null,
-            number: state.checkoutDetails.number || null
-          };
-          const response = await fetch(
-            `/webshop/api/v1/client_data/public/${SHOP_ID}`,
-            {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
+        function startInvoiceWatcher() {
+          if (!state.invoice || !state.invoice.hash) return;
+          if (state.invoiceSocket) {
+            state.invoiceSocket.close();
+          }
+          const url = new URL(window.location);
+          url.protocol = url.protocol === 'https:' ? 'wss' : 'ws';
+          url.pathname = `/api/v1/ws/${state.invoice.hash}`;
+          const ws = new WebSocket(url);
+          state.invoiceSocket = ws;
+          ws.addEventListener('message', async ({data}) => {
+            const msg = JSON.parse(data);
+            const status = (msg.status || '').toString().toLowerCase();
+            const settled = status === 'success' || msg.pending === false;
+            if (settled) {
+              markInvoicePaid();
             }
-          );
-          if (!response.ok) throw new Error('Failed to start checkout');
-          const data = await response.json();
-          if (els.paymentStatus) {
-            els.paymentStatus.textContent =
-              state.checkoutMethod === 'fiat'
-                ? 'Fiat checkout link coming soon.'
-                : 'Lightning invoice coming soon.';
+          });
+        }
+
+        function toast(message) {
+          if (!els.toast) return;
+          els.toast.textContent = message;
+          els.toast.classList.add('is-visible');
+          setTimeout(() => els.toast.classList.remove('is-visible'), 2200);
+        }
+
+        function formatAmount(amount) {
+          const numeric = Number(amount) || 0;
+          return new Intl.NumberFormat(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+          }).format(numeric);
+        }
+
+        function cartTotalValue() {
+          return state.cart.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0);
+        }
+
+        function currencyLabel() {
+          return state.shop.currency || 'sat';
+        }
+
+        function priceLabel(item) {
+          return `${formatAmount(item.price)} ${currencyLabel()}`;
+        }
+
+        function stockLabel(item) {
+          const stock = item.quantity_in_stock;
+          if (stock === null || stock === undefined) return 'in stock';
+          return `${stock} in stock`;
+        }
+
+        function parseTags(raw) {
+          if (!raw) return [];
+          if (Array.isArray(raw)) return raw.map(t => normalizeTag(t, false)).filter(Boolean);
+          const str = String(raw).trim();
+          if (!str) return [];
+          try {
+            const parsed = JSON.parse(str);
+            if (Array.isArray(parsed)) return parsed.map(t => normalizeTag(t, false)).filter(Boolean);
+          } catch (err) {/* ignore */}
+          return str
+            .split(',')
+            .map(t => normalizeTag(t, false))
+            .filter(Boolean);
+        }
+
+        function normalizeTag(tag, toLower = true) {
+          if (tag === undefined || tag === null) return '';
+          const trimmed = String(tag).trim();
+          return toLower ? trimmed.toLowerCase() : trimmed;
+        }
+
+        function parseImages(item) {
+          if (!item || !item.images) return [];
+
+          const toAssetUrl = id => {
+            if (!id) return '';
+            const val = String(id).trim();
+            if (!val) return '';
+            if (val.startsWith('http')) return val;
+            if (val.startsWith('/api/')) return val;
+            return `/api/v1/assets/${val}/binary`;
+          };
+
+          const append = list => list.map(toAssetUrl).filter(Boolean);
+
+          if (Array.isArray(item.images)) return append(item.images);
+
+          const raw = String(item.images).trim();
+          if (!raw) return [];
+
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return append(parsed);
+          } catch (err) {
+            /* ignore parse errors */
           }
-          toast('Order captured. Complete payment to finish.');
-          console.debug('Checkout response', data);
-        } catch (err) {
-          console.error(err);
-          if (els.paymentStatus) {
-            els.paymentStatus.textContent = 'Unable to start checkout.';
+
+          if (raw.includes('|||')) return append(raw.split('|||'));
+          if (raw.includes(',')) return append(raw.split(','));
+          if (raw.startsWith('data:')) return [raw];
+          return append([raw]);
+        }
+
+        function parseImage(item) {
+          const imgs = parseImages(item);
+          return imgs[0] || '';
+        }
+
+        function tagsFor(item) {
+          if (!item.__tags) {
+            item.__tags = parseTags(item.tags);
+            item.__tagsLower = item.__tags.map(t => normalizeTag(t));
           }
-          toast('Could not start checkout');
+          return item.__tags;
         }
-      }
 
-      function totalPages() {
-        return Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
-      }
-
-      function setPage(page) {
-        const max = totalPages();
-        state.page = Math.min(Math.max(page, 1), max);
-        renderProducts();
-      }
-
-      function renderPagination() {
-        if (!els.pagination) return;
-        els.pagination.innerHTML = '';
-        const max = totalPages();
-        if (max <= 1) {
-          els.pagination.style.display = 'none';
-          return;
+        function tagsLowerFor(item) {
+          if (!item.__tagsLower) tagsFor(item);
+          return item.__tagsLower || [];
         }
-        els.pagination.style.display = 'flex';
 
-        const createBtn = (label, page, disabled = false, isActive = false) => {
-          const btn = document.createElement('button');
-          btn.className = 'pager-btn' + (isActive ? ' is-active' : '');
-          btn.textContent = label;
-          btn.disabled = disabled;
-          btn.onclick = () => setPage(page);
-          els.pagination.appendChild(btn);
-        };
-
-        createBtn('‹', state.page - 1, state.page === 1, false);
-        for (let p = 1; p <= max; p++) {
-          createBtn(p, p, false, p === state.page);
+        function renderTags() {
+          if (!els.tagList) return;
+          els.tagList.innerHTML = '';
+          state.tags.forEach(tag => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-chip';
+            btn.dataset.tag = tag;
+            btn.textContent = tag === '__all' ? 'All' : tag;
+            els.tagList.appendChild(btn);
+          });
+          updateTagActive();
         }
-        createBtn('›', state.page + 1, state.page === max, false);
-      }
 
-      function showCart() {
-        els.cartModal.classList.add('is-visible');
-        state.checkoutStep = 0;
-        state.checkoutMethod = '';
-        updateCheckoutUI();
-      }
-
-      function attachEvents() {
-        els.search.addEventListener('input', e => {
-          state.search = e.target.value;
-          filterProducts();
-        });
-        if (els.tagList) {
-          els.tagList.addEventListener('click', e => {
-            const btn = e.target.closest('button[data-tag]');
-            if (!btn) return;
-            const tagValue = normalizeTag(btn.dataset.tag);
-            state.selectedTag = tagValue;
-            filterProducts();
+        function updateTagActive() {
+          if (!els.tagList) return;
+          const active = state.selectedTag.toLowerCase();
+          els.tagList.querySelectorAll('button[data-tag]').forEach(btn => {
+            btn.classList.toggle(
+              'is-active',
+              btn.dataset.tag.toLowerCase() === active
+            );
           });
         }
-        els.cartFab.onclick = showCart;
-        els.openCart.onclick = showCart;
-        document.querySelectorAll('.modal-close').forEach(btn => {
-          btn.onclick = () => closeModal(btn.dataset.close);
-        });
-        window.addEventListener('keyup', e => {
-          if (e.key === 'Escape') {
-            closeModal('product');
-            closeModal('cart');
+
+        function filterProducts() {
+          const term = state.search.trim().toLowerCase();
+          const activeTag = normalizeTag(state.selectedTag);
+          const allowed = normalizeTag(state.shop.allowed_tags || '')
+            .split(',')
+            .map(t => t.trim())
+            .filter(Boolean);
+          state.filtered = state.products.filter(item => {
+            const itemTags = tagsLowerFor(item);
+            const matchesTag = activeTag === '__all' || itemTags.includes(activeTag);
+            const matchesAllowed = !allowed.length || itemTags.some(t => allowed.includes(t));
+            const haystack = `${item.name || ''} ${item.description || ''} ${item.tags || ''}`.toLowerCase();
+            const matchesSearch = !term || haystack.includes(term);
+            return matchesTag && matchesAllowed && matchesSearch;
+          });
+          state.page = 1;
+          renderProducts();
+          updateTagActive();
+        }
+
+        function renderProducts() {
+          if (!els.grid) return;
+          els.grid.innerHTML = '';
+          if (state.loading) {
+            els.loader.style.display = 'block';
+            els.empty.style.display = 'none';
+            return;
           }
-        });
-        els.productModal.addEventListener('click', e => {
-          if (e.target === els.productModal) closeModal('product');
-        });
-        els.cartModal.addEventListener('click', e => {
-          if (e.target === els.cartModal) closeModal('cart');
-        });
-        if (els.modalPrev) {
-          els.modalPrev.addEventListener('click', () => changeModalImage(-1));
-        }
-        if (els.modalNext) {
-          els.modalNext.addEventListener('click', () => changeModalImage(1));
-        }
-        if (els.checkoutTabs) {
-          els.checkoutTabs.addEventListener('click', e => {
-            const btn = e.target.closest('button[data-step]');
-            if (!btn) return;
-            setCheckoutStep(Number(btn.dataset.step));
+          els.loader.style.display = 'none';
+          if (!state.filtered.length) {
+            els.empty.style.display = 'block';
+            if (els.pagination) els.pagination.style.display = 'none';
+            return;
+          }
+          els.empty.style.display = 'none';
+          const start = (state.page - 1) * state.pageSize;
+          const visible = state.filtered.slice(start, start + state.pageSize);
+          visible.forEach(item => {
+            const card = document.createElement('article');
+            card.className = 'product-card';
+            const imgUrl = parseImage(item);
+            const itemTags = tagsFor(item);
+            card.innerHTML = `
+              <div class="product-thumb" style="${imgUrl ? `background-image:url('${imgUrl}')` : ''}">
+                ${itemTags[0] ? `<div class="tag-label">${itemTags[0]}</div>` : ''}
+              </div>
+              <div class="product-body">
+                <div class="title">${item.name || 'Unnamed product'}</div>
+                <div class="description">${item.description || 'No description provided yet.'}</div>
+                <div class="meta">
+                  <span class="price">${priceLabel(item)}</span>
+                  <span class="stock">${stockLabel(item)}</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="btn-ghost is-secondary" data-view>View</button>
+                <button class="btn-primary" data-add>Add</button>
+              </div>
+            `;
+            card.querySelector('[data-view]').onclick = e => {
+              e.stopPropagation();
+              openProductModal(item);
+            };
+            card.querySelector('[data-add]').onclick = e => {
+              e.stopPropagation();
+              addToCart(item);
+            };
+            card.onclick = e => {
+              if (e.target.dataset.add || e.target.dataset.view) return;
+              openProductModal(item);
+            };
+            els.grid.appendChild(card);
           });
+          renderPagination();
         }
-        if (els.checkoutNext) {
-          els.checkoutNext.addEventListener('click', () => setCheckoutStep(1));
-        }
-        if (els.detailsBack) {
-          els.detailsBack.addEventListener('click', () => setCheckoutStep(0));
-        }
-        if (els.detailsNext) {
-          els.detailsNext.addEventListener('click', () => setCheckoutStep(2));
-        }
-        if (els.paymentBack) {
-          els.paymentBack.addEventListener('click', () => setCheckoutStep(1));
-        }
-        if (els.payButton) {
-          els.payButton.addEventListener('click', submitCheckout);
-        }
-        if (els.detailAddress) {
-          els.detailAddress.addEventListener('input', e => {
-            state.checkoutDetails.address = e.target.value;
-          });
-        }
-        if (els.detailEmail) {
-          els.detailEmail.addEventListener('input', e => {
-            state.checkoutDetails.email = e.target.value;
-          });
-        }
-        if (els.detailNumber) {
-          els.detailNumber.addEventListener('input', e => {
-            state.checkoutDetails.number = e.target.value;
-          });
-        }
-        if (els.methodBitcoin) {
-          els.methodBitcoin.addEventListener('click', () => {
-            state.checkoutMethod = 'bitcoin';
-            updateCheckoutUI();
-          });
-        }
-        if (els.methodFiat) {
-          els.methodFiat.addEventListener('click', () => {
-            state.checkoutMethod = 'fiat';
-            updateCheckoutUI();
-          });
-        }
-      }
 
-      async function fetchProducts() {
-        if (!state.inventoryId) {
-          state.error = 'No inventory linked to this shop yet.';
-          renderErrors();
-          return;
+        function updateCounts() {
+          const totalVal = cartTotalValue();
+          const total = state.cart.reduce((sum, item) => sum + item.quantity, 0);
+          const totalLabel = `${total} item${total === 1 ? '' : 's'}`;
+          els.cartCount.textContent = total;
+          els.cartSummary.textContent = totalLabel;
+          els.cartTotal.textContent = `Total: ${formatAmount(
+            totalVal
+          )} ${currencyLabel()}`;
+          if (els.cartTotalDetails) {
+            els.cartTotalDetails.textContent = `Total: ${formatAmount(totalVal)} ${currencyLabel()}`;
+          }
+          updateCheckoutUI();
         }
-        state.loading = true;
-        renderProducts();
-        try {
-          const params = new URLSearchParams({
-            limit: 200,
-            offset: 0,
-            sortby: 'created_at',
-            direction: 'desc',
-            is_active: true
+
+        function renderCart() {
+          if (!els.cartItems) return;
+          els.cartItems.innerHTML = '';
+          if (!state.cart.length) {
+            els.cartItems.innerHTML = '<div class="empty" style="margin:8px 0;">Cart is empty. Add a product to get started.</div>';
+            updateCounts();
+            return;
+          }
+          state.cart.forEach(entry => {
+            const row = document.createElement('div');
+            row.className = 'cart-row';
+            row.innerHTML = `
+              <div>
+                <div class="title" style="margin:0 0 4px;font-size:15px;">${entry.name}</div>
+                <div class="stock">${priceLabel(entry)}</div>
+              </div>
+              <div class="qty">
+                <button class="qty-btn" data-dec>-</button>
+                <span>${entry.quantity}</span>
+                <button class="qty-btn" data-inc>+</button>
+              </div>
+            `;
+            row.querySelector('[data-dec]').onclick = () => updateQuantity(entry.id, -1);
+            row.querySelector('[data-inc]').onclick = () => updateQuantity(entry.id, 1);
+            els.cartItems.appendChild(row);
           });
-          const response = await fetch(
-            `/inventory/api/v1/items/${state.inventoryId}/paginated?${params.toString()}`
-          );
-          if (!response.ok) throw new Error('Unable to load products.');
-          const payload = await response.json();
-          state.products = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
-          state.tags = ['__all'];
-          state.products.forEach(item => {
-            const itemTags = parseTags(item.tags);
-            item.__tags = itemTags;
-            item.__tagsLower = itemTags.map(t => normalizeTag(t));
-            itemTags.forEach(tag => {
-              const value = normalizeTag(tag);
-              if (!value) return;
-              if (!state.tags.includes(value)) {
-                state.tags.push(value);
-              }
+          updateCounts();
+        }
+
+        function updateQuantity(id, delta) {
+          const entry = state.cart.find(i => i.id === id);
+          if (!entry) return;
+          const limit =
+            typeof entry.quantity_in_stock === 'number'
+              ? Math.max(entry.quantity_in_stock, 0)
+              : Infinity;
+          entry.quantity = Math.min(Math.max(entry.quantity + delta, 0), limit || 0);
+          if (entry.quantity <= 0) {
+            state.cart = state.cart.filter(i => i.id !== id);
+          }
+          renderCart();
+        }
+
+        function addToCart(item) {
+          const existing = state.cart.find(i => i.id === item.id);
+          const limit =
+            typeof item.quantity_in_stock === 'number'
+              ? Math.max(item.quantity_in_stock, 0)
+              : Infinity;
+          if (existing) {
+            if (existing.quantity >= limit) return;
+            existing.quantity += 1;
+          } else {
+            state.cart.push({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: limit === Infinity ? 1 : Math.min(1, limit),
+              quantity_in_stock: item.quantity_in_stock
             });
+          }
+          renderCart();
+          toast('Added to cart');
+        }
+
+        function openProductModal(item) {
+          state.focusedItem = item;
+          const images = parseImages(item);
+          state.modalImages = images.length ? images : [PLACEHOLDER_IMG];
+          state.modalIndex = 0;
+          updateModalImage();
+          els.modalTitle.textContent = item.name || 'Untitled product';
+          els.modalDescription.textContent = item.description || 'No description provided yet.';
+          els.modalPrice.textContent = priceLabel(item);
+          els.modalStock.textContent = stockLabel(item);
+          els.modalTags.innerHTML = '';
+          parseTags(item.tags).forEach(tag => {
+            const span = document.createElement('span');
+            span.className = 'pill-outline';
+            span.textContent = tag;
+            els.modalTags.appendChild(span);
           });
-          renderTags();
-          filterProducts();
-          openFromQuery();
-        } catch (err) {
-          console.error(err);
-          state.error = 'Could not load products from inventory.';
-          renderErrors();
-        } finally {
-          state.loading = false;
+          els.modalAdd.onclick = () => addToCart(item);
+          els.productModal.classList.add('is-visible');
+        }
+
+        function closeModal(which) {
+          if (which === 'product') els.productModal.classList.remove('is-visible');
+          if (which === 'cart') els.cartModal.classList.remove('is-visible');
+        }
+
+        function updateModalImage() {
+          if (!els.modalImage) return;
+          const total = state.modalImages.length;
+          const current = Math.max(0, Math.min(state.modalIndex, total - 1));
+          state.modalIndex = current;
+          els.modalImage.src = state.modalImages[current] || PLACEHOLDER_IMG;
+          if (els.modalIndicator) {
+            els.modalIndicator.textContent = total > 1 ? `${current + 1} / ${total}` : '';
+          }
+          if (els.modalPrev) els.modalPrev.disabled = total <= 1;
+          if (els.modalNext) els.modalNext.disabled = total <= 1;
+        }
+
+        function changeModalImage(delta) {
+          if (!state.modalImages.length) return;
+          const total = state.modalImages.length;
+          state.modalIndex = (state.modalIndex + delta + total) % total;
+          updateModalImage();
+        }
+
+        function updateCheckoutUI() {
+          const tabs = els.checkoutTabs ? els.checkoutTabs.querySelectorAll('button[data-step]') : [];
+          tabs.forEach(btn => {
+            const step = Number(btn.dataset.step || 0);
+            btn.classList.toggle('is-active', step === state.checkoutStep);
+          });
+
+          if (els.paneCart) els.paneCart.style.display = state.checkoutStep === 0 ? 'flex' : 'none';
+          if (els.paneDetails) els.paneDetails.style.display = state.checkoutStep === 1 ? 'flex' : 'none';
+          if (els.panePayment) els.panePayment.style.display = state.checkoutStep === 2 ? 'flex' : 'none';
+
+          if (els.checkoutNext) {
+            els.checkoutNext.disabled = state.cart.length === 0;
+          }
+
+          const allowBitcoin = state.shop.allow_bitcoin !== false;
+          const allowFiat = state.shop.allow_fiat !== false;
+          if (els.methodBitcoin) {
+            els.methodBitcoin.style.display = allowBitcoin ? 'inline-flex' : 'none';
+            els.methodBitcoin.classList.toggle('is-active', state.checkoutMethod === 'bitcoin');
+          }
+          if (els.methodFiat) {
+            els.methodFiat.style.display = allowFiat ? 'inline-flex' : 'none';
+            els.methodFiat.classList.toggle('is-active', state.checkoutMethod === 'fiat');
+          }
+          if (!allowBitcoin && state.checkoutMethod === 'bitcoin') state.checkoutMethod = '';
+          if (!allowFiat && state.checkoutMethod === 'fiat') state.checkoutMethod = '';
+          if (!allowBitcoin && !allowFiat && els.paymentStatus) {
+            els.paymentStatus.textContent = 'No payment methods enabled for this shop.';
+          }
+
+          if (els.detailAddress) els.detailAddress.value = state.checkoutDetails.address || '';
+          if (els.detailEmail) els.detailEmail.value = state.checkoutDetails.email || '';
+          if (els.detailNumber) els.detailNumber.value = state.checkoutDetails.number || '';
+
+          const totalVal = cartTotalValue();
+          if (els.cartTotalPayval) {
+            els.cartTotalPayval.textContent = `${formatAmount(totalVal)} ${currencyLabel()}`;
+          }
+          if (els.payButton) {
+            els.payButton.disabled = !state.checkoutMethod || !state.cart.length;
+          }
+        }
+
+        function setCheckoutStep(step) {
+          state.checkoutStep = Math.max(0, Math.min(step, 2));
+          updateCheckoutUI();
+        }
+
+        async function submitCheckout() {
+          if (!state.checkoutMethod) {
+            toast('Select a payment method');
+            return;
+          }
+          if (!state.cart.length) {
+            toast('Cart is empty');
+            return;
+          }
+          if (els.paymentStatus) {
+            els.paymentStatus.textContent = 'Creating order...';
+          }
+          try {
+            const summaryName =
+              state.cart.length === 1
+                ? state.cart[0].name
+                : `${state.cart.length} items`;
+            const payload = {
+              product: summaryName,
+              quantity: state.cart.reduce((sum, item) => sum + item.quantity, 0),
+              address: state.checkoutDetails.address || null,
+              email: state.checkoutDetails.email || null,
+              number: state.checkoutDetails.number || null,
+              items: state.cart.map(entry => ({
+                name: entry.name,
+                quantity: entry.quantity,
+                price: entry.price
+              }))
+            };
+            const response = await fetch(
+              `/webshop/api/v1/client_data/public/${SHOP_ID}`,
+              {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              }
+            );
+            if (!response.ok) throw new Error('Failed to start checkout');
+            const data = await response.json();
+            if (data.payment_request) {
+              state.invoice = {
+                request: data.payment_request,
+                hash: data.payment_hash,
+                paid: false
+              }
+              renderInvoice();
+              startInvoiceWatcher();
+            }
+            if (els.paymentStatus) {
+              els.paymentStatus.textContent = data.payment_request
+                ? 'Awaiting payment...'
+                : 'Order captured.';
+            }
+            toast('Order captured. Complete payment to finish.');
+          } catch (err) {
+            console.error(err);
+            if (els.paymentStatus) {
+              els.paymentStatus.textContent = 'Unable to start checkout.';
+            }
+            toast('Could not start checkout');
+          }
+        }
+
+        function totalPages() {
+          return Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+        }
+
+        function setPage(page) {
+          const max = totalPages();
+          state.page = Math.min(Math.max(page, 1), max);
           renderProducts();
         }
-      }
 
-      function renderErrors() {
-        if (!els.error) return;
-        if (state.error) {
-          els.error.style.display = 'block';
-          els.error.textContent = state.error;
-        } else {
-          els.error.style.display = 'none';
-        }
-      }
+        function renderPagination() {
+          if (!els.pagination) return;
+          els.pagination.innerHTML = '';
+          const max = totalPages();
+          if (max <= 1) {
+            els.pagination.style.display = 'none';
+            return;
+          }
+          els.pagination.style.display = 'flex';
 
-      function openFromQuery() {
-        const params = new URLSearchParams(window.location.search);
-        const itemId = params.get('item');
-        const tag = params.get('tag');
-        const search = params.get('q');
-        if (tag) {
-          state.selectedTag = normalizeTag(tag);
-          renderTags();
-          filterProducts();
+          const createBtn = (label, page, disabled = false, isActive = false) => {
+            const btn = document.createElement('button');
+            btn.className = 'pager-btn' + (isActive ? ' is-active' : '');
+            btn.textContent = label;
+            btn.disabled = disabled;
+            btn.onclick = () => setPage(page);
+            els.pagination.appendChild(btn);
+          };
+
+          createBtn('‹', state.page - 1, state.page === 1, false);
+          for (let p = 1; p <= max; p++) {
+            createBtn(p, p, false, p === state.page);
+          }
+          createBtn('›', state.page + 1, state.page === max, false);
         }
-        if (search) {
-          state.search = search;
-          els.search.value = search;
-          filterProducts();
+
+        function showCart() {
+          els.cartModal.classList.add('is-visible');
+          state.checkoutStep = 0;
+          state.checkoutMethod = '';
+          updateCheckoutUI();
         }
-        if (itemId) {
-          const match = state.products.find(p => p.id === itemId);
-          if (match) {
-            openProductModal(match);
+
+        function attachEvents() {
+          els.search.addEventListener('input', e => {
+            state.search = e.target.value;
+            filterProducts();
+          });
+          if (els.tagList) {
+            els.tagList.addEventListener('click', e => {
+              const btn = e.target.closest('button[data-tag]');
+              if (!btn) return;
+              const tagValue = normalizeTag(btn.dataset.tag);
+              state.selectedTag = tagValue;
+              filterProducts();
+            });
+          }
+          els.openCart.onclick = showCart;
+          document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.onclick = () => closeModal(btn.dataset.close);
+          });
+          window.addEventListener('keyup', e => {
+            if (e.key === 'Escape') {
+              closeModal('product');
+              closeModal('cart');
+            }
+          });
+          els.productModal.addEventListener('click', e => {
+            if (e.target === els.productModal) closeModal('product');
+          });
+          els.cartModal.addEventListener('click', e => {
+            if (e.target === els.cartModal) closeModal('cart');
+          });
+          if (els.modalPrev) {
+            els.modalPrev.addEventListener('click', () => changeModalImage(-1));
+          }
+          if (els.modalNext) {
+            els.modalNext.addEventListener('click', () => changeModalImage(1));
+          }
+          if (els.checkoutTabs) {
+            els.checkoutTabs.addEventListener('click', e => {
+              const btn = e.target.closest('button[data-step]');
+              if (!btn) return;
+              setCheckoutStep(Number(btn.dataset.step));
+            });
+          }
+          if (els.checkoutNext) {
+            els.checkoutNext.addEventListener('click', () => setCheckoutStep(1));
+          }
+          if (els.detailsBack) {
+            els.detailsBack.addEventListener('click', () => setCheckoutStep(0));
+          }
+          if (els.detailsNext) {
+            els.detailsNext.addEventListener('click', () => setCheckoutStep(2));
+          }
+          if (els.paymentBack) {
+            els.paymentBack.addEventListener('click', () => setCheckoutStep(1));
+          }
+          if (els.payButton) {
+            els.payButton.addEventListener('click', submitCheckout);
+          }
+          if (els.invoiceQr) {
+            els.invoiceQr.addEventListener('click', () => {
+              if (!state.invoice || !state.invoice.request) return;
+              navigator.clipboard
+                .writeText(state.invoice.request)
+                .then(() => toast('Invoice copied to clipboard'))
+                .catch(() => toast('Unable to copy invoice'));
+            });
+          }
+          if (els.detailAddress) {
+            els.detailAddress.addEventListener('input', e => {
+              state.checkoutDetails.address = e.target.value;
+            });
+          }
+          if (els.detailEmail) {
+            els.detailEmail.addEventListener('input', e => {
+              state.checkoutDetails.email = e.target.value;
+            });
+          }
+          if (els.detailNumber) {
+            els.detailNumber.addEventListener('input', e => {
+              state.checkoutDetails.number = e.target.value;
+            });
+          }
+          if (els.methodBitcoin) {
+            els.methodBitcoin.addEventListener('click', () => {
+              state.checkoutMethod = 'bitcoin';
+              updateCheckoutUI();
+            });
+          }
+          if (els.methodFiat) {
+            els.methodFiat.addEventListener('click', () => {
+              state.checkoutMethod = 'fiat';
+              updateCheckoutUI();
+            });
           }
         }
-      }
 
-      function init() {
-        if (state.shop.allow_bitcoin === undefined) state.shop.allow_bitcoin = true;
-        if (state.shop.allow_fiat === undefined) state.shop.allow_fiat = true;
-        setTheme();
-        attachEvents();
-        renderCart();
-        fetchProducts();
-      }
+        async function fetchProducts() {
+          if (!state.inventoryId) {
+            state.error = 'No inventory linked to this shop yet.';
+            renderErrors();
+            return;
+          }
+          state.loading = true;
+          renderProducts();
+          try {
+            const params = new URLSearchParams({
+              limit: 200,
+              offset: 0,
+              sortby: 'created_at',
+              direction: 'desc',
+              is_active: true
+            });
+            const response = await fetch(
+              `/inventory/api/v1/items/${state.inventoryId}/paginated?${params.toString()}`
+            );
+            if (!response.ok) throw new Error('Unable to load products.');
+            const payload = await response.json();
+            state.products = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
+            state.tags = ['__all'];
+            state.products.forEach(item => {
+              const itemTags = tagsFor(item);
+              const lower = tagsLowerFor(item);
+              lower.forEach(tag => {
+                if (tag && !state.tags.includes(tag)) state.tags.push(tag);
+              });
+            });
+            renderTags();
+            filterProducts();
+            openFromQuery();
+          } catch (err) {
+            console.error(err);
+            state.error = 'Could not load products from inventory.';
+            renderErrors();
+          } finally {
+            state.loading = false;
+            renderProducts();
+          }
+        }
 
-      init();
-    })();
-  </script>
-</body>
+        function renderErrors() {
+          if (!els.error) return;
+          if (state.error) {
+            els.error.style.display = 'block';
+            els.error.textContent = state.error;
+          } else {
+            els.error.style.display = 'none';
+          }
+        }
+
+        function openFromQuery() {
+          const params = new URLSearchParams(window.location.search);
+          const itemId = params.get('item');
+          const tag = params.get('tag');
+          const search = params.get('q');
+          if (tag) {
+            state.selectedTag = normalizeTag(tag);
+            renderTags();
+            filterProducts();
+          }
+          if (search) {
+            state.search = search;
+            els.search.value = search;
+            filterProducts();
+          }
+          if (itemId) {
+            const match = state.products.find(p => p.id === itemId);
+            if (match) {
+              openProductModal(match);
+            }
+          }
+        }
+
+        function init() {
+          if (state.shop.allow_bitcoin === undefined) state.shop.allow_bitcoin = true;
+          if (state.shop.allow_fiat === undefined) state.shop.allow_fiat = true;
+          setTheme();
+          attachEvents();
+          renderCart();
+          fetchProducts();
+        }
+
+        init();
+      })();
+    </script>
+  </body>
 </html>

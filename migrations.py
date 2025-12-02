@@ -1,11 +1,12 @@
+from __future__ import annotations
 
-empty_dict: dict[str, str] = {}
+from lnbits.db import Database
 
-async def m002_shop(db):
+
+async def m002_shop(db: Database):
     """
     Initial shop table.
     """
-
     await db.execute(
         f"""
         CREATE TABLE webshop.shop (
@@ -15,24 +16,24 @@ async def m002_shop(db):
             description TEXT NOT NULL,
             primary_color TEXT NOT NULL,
             secondary_color TEXT NOT NULL,
+            background_color TEXT,
             wallet TEXT NOT NULL,
             inventory_id TEXT,
+            currency TEXT NOT NULL DEFAULT 'sat',
+            allowed_tags TEXT,
+            allow_bitcoin BOOLEAN NOT NULL DEFAULT 1,
+            allow_fiat BOOLEAN NOT NULL DEFAULT 1,
             created_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now},
             updated_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now}
         );
-    """
+        """
     )
 
 
-async def m006_create_client_data(db):
+async def m006_create_client_data(db: Database):
     """
     Orders table (client data).
     """
-
-    columns = await db.fetchall("PRAGMA table_info('webshop.client_data');")
-    if columns:
-        return
-
     await db.execute(
         f"""
         CREATE TABLE webshop.client_data (
@@ -44,33 +45,10 @@ async def m006_create_client_data(db):
             email TEXT,
             number TEXT,
             shipped BOOLEAN NOT NULL DEFAULT 0,
+            paid BOOLEAN NOT NULL DEFAULT 0,
+            items TEXT,
             created_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now},
             updated_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now}
         );
-    """
+        """
     )
-
-
-async def m007_add_payment_flags(db):
-    """
-    Add allow_bitcoin and allow_fiat flags to shop.
-    """
-
-    columns = await db.fetchall("PRAGMA table_info('webshop.shop');")
-    existing = {col["name"] for col in columns}
-
-    if "allow_bitcoin" not in existing:
-        await db.execute(
-            """
-            ALTER TABLE webshop.shop
-            ADD COLUMN allow_bitcoin BOOLEAN NOT NULL DEFAULT 1
-            """
-        )
-
-    if "allow_fiat" not in existing:
-        await db.execute(
-            """
-            ALTER TABLE webshop.shop
-            ADD COLUMN allow_fiat BOOLEAN NOT NULL DEFAULT 1
-            """
-        )

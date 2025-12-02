@@ -1,17 +1,10 @@
+import json
+
 # Description: This file contains the CRUD operations for talking to the database.
-
-
 from lnbits.db import Database, Filters, Page
 from lnbits.helpers import urlsafe_short_hash
 
-from .models import (
-    ClientData,
-    ClientDataFilters,
-    CreateClientData,
-    CreateShop,
-    Shop,
-    ShopFilters,
-)
+from .models import ClientData, ClientDataFilters, CreateClientData, CreateShop, Shop, ShopFilters
 
 db = Database("ext_webshop")
 
@@ -102,7 +95,11 @@ async def delete_shop(user_id: str, shop_id: str) -> None:
 
 
 async def create_client_data(shop_id: str, data: CreateClientData) -> ClientData:
-    client_data = ClientData(**data.dict(), id=urlsafe_short_hash(), shop_id=shop_id)
+    payload = data.dict()
+    # store items as JSON string to avoid insertion issues
+    if payload.get("items") is not None:
+        payload["items"] = json.dumps(payload["items"])
+    client_data = ClientData(**payload, id=urlsafe_short_hash(), shop_id=shop_id)
     await db.insert("webshop.client_data", client_data)
     return client_data
 
@@ -176,3 +173,5 @@ async def delete_client_data(shop_id: str, client_data_id: str) -> None:
         {"id": client_data_id, "shop_id": shop_id},
     )
 
+
+# Order items

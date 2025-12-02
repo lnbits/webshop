@@ -1,145 +1,145 @@
 {
-    "id": "webshop",
-    "name": "WebShop",
-    "stub_version": "v0.2.0",
-    "short_description": "Embedible web-shop",
-    "description": "A web shop you can embed in any site via an iframe.",
-    "owner_data": {
-        "name": "Shop",
+  "id": "webshop",
+  "name": "WebShop",
+  "stub_version": "v0.2.0",
+  "short_description": "Embedible web-shop",
+  "description": "A web shop you can embed in any site via an iframe.",
+  "owner_data": {
+    "name": "Shop",
+    "editable": true,
+    "fields": [
+      {
+        "name": "name",
+        "type": "str",
+        "label": "Name",
+        "hint": "",
+        "optional": false,
         "editable": true,
-        "fields": [
-            {
-                "name": "name",
-                "type": "str",
-                "label": "Name",
-                "hint": "",
-                "optional": false,
-                "editable": true,
-                "searchable": true,
-                "sortable": true,
-                "fields": []
-            },
-            {
-                "name": "description",
-                "type": "text",
-                "label": "Description",
-                "hint": "",
-                "optional": false,
-                "editable": true,
-                "searchable": true,
-                "sortable": true,
-                "fields": []
-            },
-            {
-                "name": "primary_color",
-                "type": "text",
-                "label": "Primary Color",
-                "hint": "",
-                "optional": false,
-                "editable": true,
-                "searchable": true,
-                "sortable": true,
-                "fields": []
-            },
-            {
-                "name": "secondary_color",
-                "type": "text",
-                "label": "Secondary Color",
-                "hint": "",
-                "optional": false,
-                "editable": true,
-                "searchable": true,
-                "sortable": true,
-                "fields": []
-            }
-        ]
+        "searchable": true,
+        "sortable": true,
+        "fields": []
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "label": "Description",
+        "hint": "",
+        "optional": false,
+        "editable": true,
+        "searchable": true,
+        "sortable": true,
+        "fields": []
+      },
+      {
+        "name": "primary_color",
+        "type": "text",
+        "label": "Primary Color",
+        "hint": "",
+        "optional": false,
+        "editable": true,
+        "searchable": true,
+        "sortable": true,
+        "fields": []
+      },
+      {
+        "name": "secondary_color",
+        "type": "text",
+        "label": "Secondary Color",
+        "hint": "",
+        "optional": false,
+        "editable": true,
+        "searchable": true,
+        "sortable": true,
+        "fields": []
+      }
+    ]
+  },
+  "public_page": {
+    "has_public_page": true,
+    "owner_data_fields": {
+      "name": "",
+      "description": ""
     },
-    "public_page": {
-        "has_public_page": true,
-        "owner_data_fields": {
-            "name": "",
-            "description": ""
+    "client_data_fields": {
+      "fields": [
+        {
+          "name": "product",
+          "type": "str",
+          "label": "Product",
+          "optional": false,
+          "editable": true,
+          "searchable": true,
+          "sortable": true,
+          "fields": []
         },
-        "client_data_fields": {
-            "fields": [
-                {
-                    "name": "product",
-                    "type": "str",
-                    "label": "Product",
-                    "optional": false,
-                    "editable": true,
-                    "searchable": true,
-                    "sortable": true,
-                    "fields": []
-                },
-                {
-                    "name": "quantity",
-                    "type": "int",
-                    "label": "Quantity",
-                    "optional": false,
-                    "editable": true,
-                    "searchable": false,
-                    "sortable": true,
-                    "fields": []
-                },
-                {
-                    "name": "address",
-                    "type": "text",
-                    "label": "Address",
-                    "optional": true,
-                    "editable": true,
-                    "searchable": true,
-                    "sortable": false,
-                    "fields": []
-                },
-                {
-                    "name": "email",
-                    "type": "text",
-                    "label": "Email",
-                    "optional": true,
-                    "editable": true,
-                    "searchable": true,
-                    "sortable": true,
-                    "fields": []
-                },
-                {
-                    "name": "number",
-                    "type": "text",
-                    "label": "Phone",
-                    "optional": true,
-                    "editable": true,
-                    "searchable": true,
-                    "sortable": false,
-                    "fields": []
-                },
-                {
-                    "name": "shipped",
-                    "type": "bool",
-                    "label": "Shipped",
-                    "optional": true,
-                    "editable": true,
-                    "searchable": true,
-                    "sortable": true,
-                    "fields": []
-                }
-            ],
-            "public_inputs": []
+        {
+          "name": "quantity",
+          "type": "int",
+          "label": "Quantity",
+          "optional": false,
+          "editable": true,
+          "searchable": false,
+          "sortable": true,
+          "fields": []
         },
-        "action_fields": {
-            "generate_action": true,
-            "generate_payment_logic": false,
-            "wallet_id": "",
-            "currency": "",
-            "amount": "",
-            "amount_source": null,
-            "paid_flag": ""
+        {
+          "name": "address",
+          "type": "text",
+          "label": "Address",
+          "optional": true,
+          "editable": true,
+          "searchable": true,
+          "sortable": false,
+          "fields": []
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "label": "Email",
+          "optional": true,
+          "editable": true,
+          "searchable": true,
+          "sortable": true,
+          "fields": []
+        },
+        {
+          "name": "number",
+          "type": "text",
+          "label": "Phone",
+          "optional": true,
+          "editable": true,
+          "searchable": true,
+          "sortable": false,
+          "fields": []
+        },
+        {
+          "name": "shipped",
+          "type": "bool",
+          "label": "Shipped",
+          "optional": true,
+          "editable": true,
+          "searchable": true,
+          "sortable": true,
+          "fields": []
         }
+      ],
+      "public_inputs": []
     },
-    "preview_action": {
-        "is_preview_mode": false,
-        "is_settings_preview": false,
-        "is_owner_data_preview": false,
-        "is_client_data_preview": false,
-        "is_public_page_preview": false
+    "action_fields": {
+      "generate_action": true,
+      "generate_payment_logic": false,
+      "wallet_id": "",
+      "currency": "",
+      "amount": "",
+      "amount_source": null,
+      "paid_flag": ""
     }
+  },
+  "preview_action": {
+    "is_preview_mode": false,
+    "is_settings_preview": false,
+    "is_owner_data_preview": false,
+    "is_client_data_preview": false,
+    "is_public_page_preview": false
+  }
 }

@@ -27,9 +27,7 @@ def webshop_renderer():
 
 @webshop_generic_router.get("/", response_class=HTMLResponse)
 async def index(req: Request, user: User = Depends(check_user_exists)):
-    return webshop_renderer().TemplateResponse(
-        "webshop/index.html", {"request": req, "user": user.json()}
-    )
+    return webshop_renderer().TemplateResponse("webshop/index.html", {"request": req, "user": user.json()})
 
 
 # Frontend shareable page
