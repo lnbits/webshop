@@ -12,6 +12,8 @@ class CreateShop(BaseModel):
     secondary_color: str
     wallet: str
     inventory_id: str | None = None
+    allow_bitcoin: bool = True
+    allow_fiat: bool = True
 
 
 class Shop(BaseModel):
@@ -23,6 +25,8 @@ class Shop(BaseModel):
     wallet: str
     secondary_color: str
     inventory_id: str | None = None
+    allow_bitcoin: bool = True
+    allow_fiat: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -35,6 +39,8 @@ class ShopFilters(FilterModel):
         "secondary_color",
         "wallet",
         "inventory_id",
+        "allow_bitcoin",
+        "allow_fiat",
     ]
 
     __sort_fields__ = [
@@ -44,6 +50,8 @@ class ShopFilters(FilterModel):
         "secondary_color",
         "wallet",
         "inventory_id",
+        "allow_bitcoin",
+        "allow_fiat",
         
         "created_at",
         "updated_at",
@@ -51,6 +59,8 @@ class ShopFilters(FilterModel):
 
     created_at: datetime | None
     updated_at: datetime | None
+    allow_bitcoin: bool | None = None
+    allow_fiat: bool | None = None
 
 
 ########################### Orders (Client Data) ############################

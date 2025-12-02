@@ -327,7 +327,7 @@
       background: #fff;
       border-radius: var(--radius-lg);
       width: min(960px, 100%);
-      max-height: 90vh;
+      max-height: 80vh;
       overflow: hidden;
       box-shadow: none;
       position: relative;
@@ -455,6 +455,129 @@
       border-bottom: 1px solid var(--border);
       max-height: 320px;
       overflow: auto;
+    }
+    .cart-modal-card {
+      width: min(920px, 100%);
+      grid-template-columns: 1fr;
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-modal-card .modal-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .checkout-content {
+      flex: 1;
+      display: flex;
+      position: relative;
+    }
+    .checkout-pane {
+      padding-top: 6px;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .checkout-pane .scrollable {
+      max-height: none;
+    }
+    .pane-body {
+      flex: 1;
+      overflow: auto;
+    }
+    .cart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .checkout-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0 6px;
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+    .tab-btn.is-active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .cart-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .cart-total {
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .checkout-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .form-field input,
+    .form-field textarea {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+    .form-field textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .pay-methods {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pay-pill {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .pay-pill.is-active {
+      background: color-mix(in srgb, var(--secondary) 40%, #fff 60%);
+      border-color: var(--secondary);
+      color: #0b1222;
+    }
+    .payment-status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
     }
     .cart-row {
       display: grid;
@@ -586,17 +709,81 @@
   </div>
 
   <div class="modal" id="cart-modal">
-    <div class="modal-card" style="grid-template-columns: 1fr;">
+    <div class="modal-card cart-modal-card">
       <button class="modal-close" data-close="cart">×</button>
       <div class="modal-body">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-          <h3 style="margin:0;">Cart</h3>
+        <div class="cart-header">
+          <div>
+            <h3 style="margin:0;">Cart</h3>
+            <div class="text-caption" style="color:var(--muted); font-size:13px;">Review your items and checkout.</div>
+          </div>
           <span class="badge" id="cart-summary">0 items</span>
         </div>
-        <div class="cart-list" id="cart-items"></div>
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-          <div style="font-weight:800; font-size:18px;" id="cart-total">Total: 0</div>
-          <button class="btn-primary" disabled title="Checkout coming soon">Checkout coming soon</button>
+
+        <div class="checkout-tabs" id="checkout-tabs">
+          <button class="tab-btn is-active" data-step="0">Cart</button>
+          <button class="tab-btn" data-step="1">Details</button>
+          <button class="tab-btn" data-step="2">Payment</button>
+        </div>
+
+        <div class="checkout-content">
+          <div class="checkout-pane" id="pane-cart" data-step="0">
+            <div class="pane-body">
+              <div class="cart-list scrollable" id="cart-items"></div>
+            </div>
+            <div class="cart-footer-row">
+              <div class="cart-total" id="cart-total">Total: 0</div>
+              <div class="checkout-actions">
+                <button class="btn-ghost" id="checkout-next">Checkout</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="checkout-pane" id="pane-details" data-step="1" style="display:none;">
+            <div class="pane-body">
+              <div class="form-grid">
+                <label class="form-field">
+                  <span>Address (optional)</span>
+                  <textarea id="detail-address" placeholder="Shipping address"></textarea>
+                </label>
+                <label class="form-field">
+                  <span>Email (optional)</span>
+                  <input type="email" id="detail-email" placeholder="you@example.com" />
+                </label>
+                <label class="form-field">
+                  <span>Phone / number (optional)</span>
+                  <input type="text" id="detail-number" placeholder="+1 555..." />
+                </label>
+              </div>
+            </div>
+            <div class="cart-footer-row">
+              <div class="cart-total" id="cart-total-details"></div>
+              <div class="checkout-actions">
+                <button class="btn-ghost" id="details-back">Back</button>
+                <button class="btn-primary" id="details-next">Continue</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="checkout-pane" id="pane-payment" data-step="2" style="display:none;">
+            <div class="pane-body">
+              <div class="payment-options">
+                <div class="text-caption" style="margin-bottom:6px; color:var(--muted);">Choose a payment method</div>
+                <div class="pay-methods">
+                  <button class="pay-pill" id="method-bitcoin">Bitcoin / Lightning</button>
+                  <button class="pay-pill" id="method-fiat">Fiat (Stripe)</button>
+                </div>
+              </div>
+            </div>
+            <div class="cart-footer-row">
+              <div class="cart-total" id="cart-total-payment">Total: <span id="cart-total-payval"></span></div>
+              <div class="checkout-actions">
+                <button class="btn-ghost" id="payment-back">Back</button>
+                <button class="btn-primary" id="pay-button">Pay now</button>
+              </div>
+            </div>
+            <div class="payment-status" id="payment-status">Select a method to continue.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -628,7 +815,14 @@
         modalImages: [],
         modalIndex: 0,
         page: 1,
-        pageSize: 20
+        pageSize: 20,
+        checkoutStep: 0,
+        checkoutDetails: {
+          address: '',
+          email: '',
+          number: ''
+        },
+        checkoutMethod: ''
       };
 
       const els = {
@@ -658,7 +852,25 @@
         modalIndicator: document.getElementById('modal-indicator'),
         cartItems: document.getElementById('cart-items'),
         cartSummary: document.getElementById('cart-summary'),
-        cartTotal: document.getElementById('cart-total')
+        cartTotal: document.getElementById('cart-total'),
+        cartTotalDetails: document.getElementById('cart-total-details'),
+        checkoutTabs: document.getElementById('checkout-tabs'),
+        paneCart: document.getElementById('pane-cart'),
+        paneDetails: document.getElementById('pane-details'),
+        panePayment: document.getElementById('pane-payment'),
+        checkoutNext: document.getElementById('checkout-next'),
+        detailsNext: document.getElementById('details-next'),
+        detailsBack: document.getElementById('details-back'),
+        paymentBack: document.getElementById('payment-back'),
+        payButton: document.getElementById('pay-button'),
+        detailAddress: document.getElementById('detail-address'),
+        detailEmail: document.getElementById('detail-email'),
+        detailNumber: document.getElementById('detail-number'),
+        methodBitcoin: document.getElementById('method-bitcoin'),
+        methodFiat: document.getElementById('method-fiat'),
+        paymentStatus: document.getElementById('payment-status')
+        ,
+        cartTotalPayval: document.getElementById('cart-total-payval')
       };
 
       function setTheme() {
@@ -681,6 +893,10 @@
           minimumFractionDigits: 0,
           maximumFractionDigits: 2
         }).format(numeric);
+      }
+
+      function cartTotalValue() {
+        return state.cart.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0);
       }
 
       function currencyLabel() {
@@ -856,14 +1072,19 @@
       }
 
       function updateCounts() {
+        const totalVal = cartTotalValue();
         const total = state.cart.reduce((sum, item) => sum + item.quantity, 0);
         const totalLabel = `${total} item${total === 1 ? '' : 's'}`;
         els.cartCount.textContent = total;
         els.fabCount.textContent = total;
         els.cartSummary.textContent = totalLabel;
         els.cartTotal.textContent = `Total: ${formatAmount(
-          state.cart.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0)
+          totalVal
         )} ${currencyLabel()}`;
+        if (els.cartTotalDetails) {
+          els.cartTotalDetails.textContent = `Total: ${formatAmount(totalVal)} ${currencyLabel()}`;
+        }
+        updateCheckoutUI();
       }
 
       function renderCart() {
@@ -977,6 +1198,106 @@
         updateModalImage();
       }
 
+      function updateCheckoutUI() {
+        const tabs = els.checkoutTabs ? els.checkoutTabs.querySelectorAll('button[data-step]') : [];
+        tabs.forEach(btn => {
+          const step = Number(btn.dataset.step || 0);
+          btn.classList.toggle('is-active', step === state.checkoutStep);
+        });
+
+        if (els.paneCart) els.paneCart.style.display = state.checkoutStep === 0 ? 'flex' : 'none';
+        if (els.paneDetails) els.paneDetails.style.display = state.checkoutStep === 1 ? 'flex' : 'none';
+        if (els.panePayment) els.panePayment.style.display = state.checkoutStep === 2 ? 'flex' : 'none';
+
+        if (els.checkoutNext) {
+          els.checkoutNext.disabled = state.cart.length === 0;
+        }
+
+        const allowBitcoin = state.shop.allow_bitcoin !== false;
+        const allowFiat = state.shop.allow_fiat !== false;
+        if (els.methodBitcoin) {
+          els.methodBitcoin.style.display = allowBitcoin ? 'inline-flex' : 'none';
+          els.methodBitcoin.classList.toggle('is-active', state.checkoutMethod === 'bitcoin');
+        }
+        if (els.methodFiat) {
+          els.methodFiat.style.display = allowFiat ? 'inline-flex' : 'none';
+          els.methodFiat.classList.toggle('is-active', state.checkoutMethod === 'fiat');
+        }
+        if (!allowBitcoin && state.checkoutMethod === 'bitcoin') state.checkoutMethod = '';
+        if (!allowFiat && state.checkoutMethod === 'fiat') state.checkoutMethod = '';
+        if (!allowBitcoin && !allowFiat && els.paymentStatus) {
+          els.paymentStatus.textContent = 'No payment methods enabled for this shop.';
+        }
+
+        if (els.detailAddress) els.detailAddress.value = state.checkoutDetails.address || '';
+        if (els.detailEmail) els.detailEmail.value = state.checkoutDetails.email || '';
+        if (els.detailNumber) els.detailNumber.value = state.checkoutDetails.number || '';
+
+        const totalVal = cartTotalValue();
+        if (els.cartTotalPayval) {
+          els.cartTotalPayval.textContent = `${formatAmount(totalVal)} ${currencyLabel()}`;
+        }
+        if (els.payButton) {
+          els.payButton.disabled = !state.checkoutMethod || !state.cart.length;
+        }
+      }
+
+      function setCheckoutStep(step) {
+        state.checkoutStep = Math.max(0, Math.min(step, 2));
+        updateCheckoutUI();
+      }
+
+      async function submitCheckout() {
+        if (!state.checkoutMethod) {
+          toast('Select a payment method');
+          return;
+        }
+        if (!state.cart.length) {
+          toast('Cart is empty');
+          return;
+        }
+        if (els.paymentStatus) {
+          els.paymentStatus.textContent = 'Creating order...';
+        }
+        try {
+          const summaryName =
+            state.cart.length === 1
+              ? state.cart[0].name
+              : `${state.cart.length} items`;
+          const payload = {
+            product: summaryName,
+            quantity: state.cart.reduce((sum, item) => sum + item.quantity, 0),
+            address: state.checkoutDetails.address || null,
+            email: state.checkoutDetails.email || null,
+            number: state.checkoutDetails.number || null
+          };
+          const response = await fetch(
+            `/webshop/api/v1/client_data/public/${SHOP_ID}`,
+            {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            }
+          );
+          if (!response.ok) throw new Error('Failed to start checkout');
+          const data = await response.json();
+          if (els.paymentStatus) {
+            els.paymentStatus.textContent =
+              state.checkoutMethod === 'fiat'
+                ? 'Fiat checkout link coming soon.'
+                : 'Lightning invoice coming soon.';
+          }
+          toast('Order captured. Complete payment to finish.');
+          console.debug('Checkout response', data);
+        } catch (err) {
+          console.error(err);
+          if (els.paymentStatus) {
+            els.paymentStatus.textContent = 'Unable to start checkout.';
+          }
+          toast('Could not start checkout');
+        }
+      }
+
       function totalPages() {
         return Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
       }
@@ -1015,6 +1336,9 @@
 
       function showCart() {
         els.cartModal.classList.add('is-visible');
+        state.checkoutStep = 0;
+        state.checkoutMethod = '';
+        updateCheckoutUI();
       }
 
       function attachEvents() {
@@ -1053,6 +1377,55 @@
         }
         if (els.modalNext) {
           els.modalNext.addEventListener('click', () => changeModalImage(1));
+        }
+        if (els.checkoutTabs) {
+          els.checkoutTabs.addEventListener('click', e => {
+            const btn = e.target.closest('button[data-step]');
+            if (!btn) return;
+            setCheckoutStep(Number(btn.dataset.step));
+          });
+        }
+        if (els.checkoutNext) {
+          els.checkoutNext.addEventListener('click', () => setCheckoutStep(1));
+        }
+        if (els.detailsBack) {
+          els.detailsBack.addEventListener('click', () => setCheckoutStep(0));
+        }
+        if (els.detailsNext) {
+          els.detailsNext.addEventListener('click', () => setCheckoutStep(2));
+        }
+        if (els.paymentBack) {
+          els.paymentBack.addEventListener('click', () => setCheckoutStep(1));
+        }
+        if (els.payButton) {
+          els.payButton.addEventListener('click', submitCheckout);
+        }
+        if (els.detailAddress) {
+          els.detailAddress.addEventListener('input', e => {
+            state.checkoutDetails.address = e.target.value;
+          });
+        }
+        if (els.detailEmail) {
+          els.detailEmail.addEventListener('input', e => {
+            state.checkoutDetails.email = e.target.value;
+          });
+        }
+        if (els.detailNumber) {
+          els.detailNumber.addEventListener('input', e => {
+            state.checkoutDetails.number = e.target.value;
+          });
+        }
+        if (els.methodBitcoin) {
+          els.methodBitcoin.addEventListener('click', () => {
+            state.checkoutMethod = 'bitcoin';
+            updateCheckoutUI();
+          });
+        }
+        if (els.methodFiat) {
+          els.methodFiat.addEventListener('click', () => {
+            state.checkoutMethod = 'fiat';
+            updateCheckoutUI();
+          });
         }
       }
 
@@ -1138,6 +1511,8 @@
       }
 
       function init() {
+        if (state.shop.allow_bitcoin === undefined) state.shop.allow_bitcoin = true;
+        if (state.shop.allow_fiat === undefined) state.shop.allow_fiat = true;
         setTheme();
         attachEvents();
         renderCart();

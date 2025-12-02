@@ -49,3 +49,28 @@ async def m006_create_client_data(db):
         );
     """
     )
+
+
+async def m007_add_payment_flags(db):
+    """
+    Add allow_bitcoin and allow_fiat flags to shop.
+    """
+
+    columns = await db.fetchall("PRAGMA table_info('webshop.shop');")
+    existing = {col["name"] for col in columns}
+
+    if "allow_bitcoin" not in existing:
+        await db.execute(
+            """
+            ALTER TABLE webshop.shop
+            ADD COLUMN allow_bitcoin BOOLEAN NOT NULL DEFAULT 1
+            """
+        )
+
+    if "allow_fiat" not in existing:
+        await db.execute(
+            """
+            ALTER TABLE webshop.shop
+            ADD COLUMN allow_fiat BOOLEAN NOT NULL DEFAULT 1
+            """
+        )

@@ -295,6 +295,22 @@ window_vars(user) }}
   label="Secondary Color"
   hint=" "
 ></q-input>
+<div class="row q-col-gutter-md">
+  <div class="col-12 col-sm-6">
+    <q-toggle
+      v-model="shopFormDialog.data.allow_bitcoin"
+      color="primary"
+      label="Allow Bitcoin / Lightning payments"
+    ></q-toggle>
+  </div>
+  <div class="col-12 col-sm-6">
+    <q-toggle
+      v-model="shopFormDialog.data.allow_fiat"
+      color="primary"
+      label="Allow Fiat (Stripe) payments"
+    ></q-toggle>
+  </div>
+</div>
 <q-input
   filled
   dense

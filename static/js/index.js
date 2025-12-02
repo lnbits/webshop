@@ -19,7 +19,9 @@ window.app = Vue.createApp({
           primary_color: null,
           secondary_color: null,
           inventory_id: null,
-          wallet: null
+          wallet: null,
+          allow_bitcoin: true,
+          allow_fiat: true
         }
       },
       shopList: [],
@@ -102,12 +104,18 @@ window.app = Vue.createApp({
           primary_color: null,
           secondary_color: null,
           inventory_id: this.defaultInventoryId,
-          wallet: this.g?.user?.wallets?.[0]?.id || null
+          wallet: this.g?.user?.wallets?.[0]?.id || null,
+          allow_bitcoin: true,
+          allow_fiat: true
       }
       this.shopFormDialog.show = true
     },
     async showEditShopForm(data) {
-      this.shopFormDialog.data = {...data}
+      this.shopFormDialog.data = {
+        allow_bitcoin: true,
+        allow_fiat: true,
+        ...data
+      }
       if (!this.shopFormDialog.data.inventory_id && this.defaultInventoryId) {
         this.shopFormDialog.data.inventory_id = this.defaultInventoryId
       }
