@@ -12,7 +12,6 @@ from .crud import (
 )
 from .models import (
     ClientDataPaymentRequest,  #
-    CreateClientData,
     PublicClientDataRequest,
 )
 
@@ -86,8 +85,7 @@ async def payment_request_for_client_data(
         client_data_id=client_data.id,
         payment_request=getattr(invoice, "bolt11", None),
         payment_hash=getattr(invoice, "checking_id", None),
-        fiat_payment_request=fiat_link
-        or getattr(invoice, "extra", {}).get("fiat_payment_request"),
+        fiat_payment_request=fiat_link or getattr(invoice, "extra", {}).get("fiat_payment_request"),
         fiat_provider=getattr(invoice, "fiat_provider", None) or chosen_fiat_provider,
         is_fiat=bool(getattr(invoice, "fiat_provider", None) or chosen_fiat_provider),
     )
