@@ -21,6 +21,7 @@ async def m002_shop(db: Database):
             inventory_id TEXT,
             currency TEXT NOT NULL DEFAULT 'sat',
             allowed_tags TEXT,
+            omit_tags TEXT,
             allow_bitcoin BOOLEAN NOT NULL DEFAULT 1,
             allow_fiat BOOLEAN NOT NULL DEFAULT 1,
             created_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now},

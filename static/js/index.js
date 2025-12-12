@@ -9,6 +9,7 @@ window.app = Vue.createApp({
       defaultInventoryCurrency: null,
       inventoryError: '',
       inventoryTagOptions: [],
+      inventoryOmitTagOptions: [],
       settingsFormDialog: {
         show: false,
         data: {}
@@ -25,6 +26,7 @@ window.app = Vue.createApp({
           inventory_id: null,
           currency: 'sat',
           allowed_tags: [],
+          omit_tags: [],
           wallet: null,
           allow_bitcoin: true,
           allow_fiat: true
@@ -230,6 +232,7 @@ window.app = Vue.createApp({
         inventory_id: this.defaultInventoryId,
         currency: this.defaultInventoryCurrency || 'sat',
         allowed_tags: [...this.inventoryTagOptions],
+        omit_tags: [...this.inventoryOmitTagOptions],
         wallet: this.g?.user?.wallets?.[0]?.id || null,
         allow_bitcoin: true,
         allow_fiat: true
@@ -257,6 +260,14 @@ window.app = Vue.createApp({
               .filter(Boolean)
           : [...this.inventoryTagOptions]
       }
+      if (!Array.isArray(this.shopFormDialog.data.omit_tags)) {
+        this.shopFormDialog.data.omit_tags = this.shopFormDialog.data.omit_tags
+          ? this.shopFormDialog.data.omit_tags
+              .split(',')
+              .map(t => t.trim())
+              .filter(Boolean)
+          : [...this.inventoryOmitTagOptions]
+      }
       this.shopFormDialog.show = true
     },
     async saveShop() {
@@ -270,6 +281,9 @@ window.app = Vue.createApp({
         }
         if (Array.isArray(data.allowed_tags)) {
           data.allowed_tags = data.allowed_tags.join(',')
+        }
+        if (Array.isArray(data.omit_tags)) {
+          data.omit_tags = data.omit_tags.join(',')
         }
         const method = data.id ? 'PUT' : 'POST'
         const entry = data.id ? `/${data.id}` : ''
@@ -348,8 +362,17 @@ window.app = Vue.createApp({
               .split(',')
               .map(t => t.trim())
               .filter(Boolean)
+        this.inventoryOmitTagOptions = Array.isArray(data?.omit_tags)
+          ? data.omit_tags.filter(Boolean)
+          : String(data?.omit_tags || '')
+              .split(',')
+              .map(t => t.trim())
+              .filter(Boolean)
         if (!this.inventoryTagOptions.length) {
           this.inventoryTagOptions = []
+        }
+        if (!this.inventoryOmitTagOptions.length) {
+          this.inventoryOmitTagOptions = []
         }
         this.inventoryError = ''
       } catch (error) {
@@ -359,6 +382,7 @@ window.app = Vue.createApp({
         this.defaultInventoryId = null
         this.defaultInventoryCurrency = null
         this.inventoryTagOptions = []
+        this.inventoryOmitTagOptions = []
       }
     },
 

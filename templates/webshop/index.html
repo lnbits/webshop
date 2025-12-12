@@ -317,8 +317,19 @@
         map-options
         v-model="shopFormDialog.data.allowed_tags"
         :options="inventoryTagOptions"
-        label="Visible Tags"
+        label="Inventory Tags"
         hint="Choose which inventory tags to show (all by default)"
+      ></q-select>
+      <q-select
+        filled
+        dense
+        multiple
+        emit-value
+        map-options
+        v-model="shopFormDialog.data.omit_tags"
+        :options="inventoryOmitTagOptions"
+        label="Omit Tags"
+        hint="Products with these omit tags won't be included."
       ></q-select>
       <div class="row q-col-gutter-md">
         <div class="col-12 col-sm-6">
@@ -351,6 +362,7 @@
         label="Inventory ID"
         hint="Inventory ID from the Inventory extension"
         readonly
+        v-show="false"
       ></q-input>
       <q-input
         filled
@@ -359,6 +371,7 @@
         label="Currency"
         hint="Currency from the linked inventory"
         readonly
+        v-show="false"
       ></q-input>
       <q-select
         filled

@@ -30,6 +30,7 @@ from .models import (
     ClientDataPaymentRequest,  #
     CreateClientData,
     CreateShop,
+    PublicClientDataRequest,
     Shop,
     ShopFilters,
 )
@@ -157,10 +158,12 @@ async def api_create_client_data(
 )
 async def api_submit_public_client_data(
     shop_id: str,
-    data: CreateClientData,
+    data: PublicClientDataRequest,
 ) -> ClientDataPaymentRequest | None:
 
-    return await payment_request_for_client_data(shop_id, data)
+    return await payment_request_for_client_data(
+        shop_id, data, data.payment_method, data.fiat_provider
+    )
 
 
 @webshop_api_router.put(

@@ -1,7 +1,7 @@
 import json
 
-from lnbits.core.models import Payment
-from lnbits.core.services import create_invoice
+from lnbits.core.models import CreateInvoice, Payment
+from lnbits.core.services import create_payment_request
 from loguru import logger
 
 from .crud import (
@@ -13,12 +13,15 @@ from .crud import (
 from .models import (
     ClientDataPaymentRequest,  #
     CreateClientData,
+    PublicClientDataRequest,
 )
 
 
 async def payment_request_for_client_data(
     shop_id: str,
-    data: CreateClientData,
+    data: PublicClientDataRequest,
+    payment_method: str | None = None,
+    fiat_provider: str | None = None,
 ) -> ClientDataPaymentRequest:
 
     shop = await get_shop_by_id(shop_id)
@@ -55,18 +58,40 @@ async def payment_request_for_client_data(
 
     amount = float(amount or 0.0)
 
-    invoice = await create_invoice(
+    # Build invoice request using core's create_payment_request (supports fiat or LN)
+    from lnbits.settings import settings  # local import to avoid cycles
+
+    providers = settings.get_fiat_providers_for_user(getattr(shop, "user_id", None))
+    chosen_fiat_provider = None
+    unit = currency
+    if payment_method == "fiat" and getattr(shop, "allow_fiat", True):
+        chosen_fiat_provider = fiat_provider or (providers[0] if providers else None)
+        if chosen_fiat_provider and str(unit).lower() == "sat":
+            unit = getattr(settings, "denomination", "USD")
+
+    invoice = await create_payment_request(
         wallet_id=shop.wallet,
-        amount=amount,
-        currency=currency,
-        memo=f"Webshop order {client_data.id} for {data.product}",
-        extra={"tag": "webshop", "client_data_id": client_data.id},
+        invoice_data=CreateInvoice(
+            out=False,
+            amount=amount,
+            unit=unit,
+            fiat_provider=chosen_fiat_provider,
+            memo=f"Webshop order {client_data.id} for {data.product}",
+            extra={"tag": "webshop", "client_data_id": client_data.id},
+        ),
     )
+    fiat_link = getattr(invoice, "extra", {}).get("fiat_payment_request")
+
     client_data_resp = ClientDataPaymentRequest(
         client_data_id=client_data.id,
         payment_request=getattr(invoice, "bolt11", None),
         payment_hash=getattr(invoice, "checking_id", None),
+        fiat_payment_request=fiat_link
+        or getattr(invoice, "extra", {}).get("fiat_payment_request"),
+        fiat_provider=getattr(invoice, "fiat_provider", None) or chosen_fiat_provider,
+        is_fiat=bool(getattr(invoice, "fiat_provider", None) or chosen_fiat_provider),
     )
+    logger.debug(client_data_resp)
     return client_data_resp
 
 

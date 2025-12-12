@@ -566,6 +566,22 @@
           font-size: 13px;
           color: var(--muted);
         }
+        .spinner {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border: 2px solid color-mix(in srgb, var(--border) 70%, #ffffff 30%);
+          border-top-color: var(--primary);
+          border-radius: 50%;
+          animation: spin 0.9s linear infinite;
+          vertical-align: middle;
+          margin-right: 8px;
+        }
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
         .invoice-box {
           margin-top: 12px;
           display: grid;
@@ -833,6 +849,7 @@
                   <img
                     id="invoice-qr-img"
                     alt="Payment QR"
+                    style="display:none"
                     title="Click to copy invoice"
                   />
                   <div class="payment-status" id="payment-status">
@@ -890,6 +907,7 @@
             number: ''
           },
           checkoutMethod: '',
+          isPaying: false,
           invoice: null,
           invoiceSocket: null
         };
@@ -947,13 +965,26 @@
           document.documentElement.style.setProperty('--secondary', secondary);
         }
 
-        function renderInvoice() {
-          if (!state.invoice) return;
-          const text = state.invoice.request || '';
-          if (els.invoiceQr && text) {
-            els.invoiceQr.src = `/api/v1/qrcode/${encodeURIComponent(text)}`;
-            els.invoiceQr.alt = 'Payment QR';
+        function setPaymentStatus(message, loading = false) {
+          if (!els.paymentStatus) return;
+          if (loading) {
+            els.paymentStatus.innerHTML = `<span class="spinner"></span>${message}`;
+          } else {
+            els.paymentStatus.textContent = message;
           }
+        }
+
+        function renderInvoice() {
+          if (!els.invoiceQr) return;
+          if (!state.invoice || !state.invoice.request) {
+            els.invoiceQr.style.display = 'none';
+            els.invoiceQr.removeAttribute('src');
+            return;
+          }
+          const text = state.invoice.request || '';
+          els.invoiceQr.src = `/api/v1/qrcode/${encodeURIComponent(text)}`;
+          els.invoiceQr.alt = 'Payment QR';
+          els.invoiceQr.style.display = 'block';
         }
 
         function markInvoicePaid() {
@@ -1000,7 +1031,7 @@
         function formatAmount(amount) {
           const numeric = Number(amount) || 0;
           return new Intl.NumberFormat(undefined, {
-            minimumFractionDigits: 0,
+            minimumFractionDigits: 2,
             maximumFractionDigits: 2
           }).format(numeric);
         }
@@ -1094,6 +1125,14 @@
           return item.__tagsLower || [];
         }
 
+        function omitTagsLowerFor(item) {
+          if (!item.__omitTagsLower) {
+            const raw = parseTags(item.omit_tags);
+            item.__omitTagsLower = raw.map(t => normalizeTag(t));
+          }
+          return item.__omitTagsLower || [];
+        }
+
         function renderTags() {
           if (!els.tagList) return;
           els.tagList.innerHTML = '';
@@ -1125,13 +1164,19 @@
             .split(',')
             .map(t => t.trim())
             .filter(Boolean);
+          const omitList = normalizeTag(state.shop.omit_tags || '')
+            .split(',')
+            .map(t => t.trim())
+            .filter(Boolean);
           state.filtered = state.products.filter(item => {
             const itemTags = tagsLowerFor(item);
             const matchesTag = activeTag === '__all' || itemTags.includes(activeTag);
             const matchesAllowed = !allowed.length || itemTags.some(t => allowed.includes(t));
+            const itemOmit = omitTagsLowerFor(item);
+            const hasOmit = omitList.length && itemOmit.some(t => omitList.includes(t));
             const haystack = `${item.name || ''} ${item.description || ''} ${item.tags || ''}`.toLowerCase();
             const matchesSearch = !term || haystack.includes(term);
-            return matchesTag && matchesAllowed && matchesSearch;
+            return matchesTag && matchesAllowed && !hasOmit && matchesSearch;
           });
           state.page = 1;
           renderProducts();
@@ -1359,9 +1404,15 @@
           if (els.cartTotalPayval) {
             els.cartTotalPayval.textContent = `${formatAmount(totalVal)} ${currencyLabel()}`;
           }
-          if (els.payButton) {
-            els.payButton.disabled = !state.checkoutMethod || !state.cart.length;
-          }
+          renderPayButton();
+        }
+
+        function renderPayButton() {
+          if (!els.payButton) return;
+          const disabled =
+            !state.checkoutMethod || !state.cart.length || state.isPaying;
+          els.payButton.disabled = disabled;
+          els.payButton.textContent = state.isPaying ? 'Processing...' : 'Pay now';
         }
 
         function setCheckoutStep(step) {
@@ -1378,9 +1429,9 @@
             toast('Cart is empty');
             return;
           }
-          if (els.paymentStatus) {
-            els.paymentStatus.textContent = 'Creating order...';
-          }
+          state.isPaying = true;
+          renderPayButton();
+          setPaymentStatus('Creating order...', true);
           try {
             const summaryName =
               state.cart.length === 1
@@ -1396,7 +1447,12 @@
                 name: entry.name,
                 quantity: entry.quantity,
                 price: entry.price
-              }))
+              })),
+              payment_method: state.checkoutMethod,
+              fiat_provider:
+                state.checkoutMethod === 'fiat'
+                  ? state.shop.fiat_provider || null
+                  : null
             };
             const response = await fetch(
               `/webshop/api/v1/client_data/public/${SHOP_ID}`,
@@ -1408,27 +1464,43 @@
             );
             if (!response.ok) throw new Error('Failed to start checkout');
             const data = await response.json();
-            if (data.payment_request) {
+            const isFiat = Boolean(data.is_fiat);
+            const fiatLink = data.fiat_payment_request || data.payment_request;
+            if (data.payment_request || data.fiat_payment_request) {
               state.invoice = {
                 request: data.payment_request,
                 hash: data.payment_hash,
                 paid: false
               }
-              renderInvoice();
-              startInvoiceWatcher();
+              if (isFiat) {
+                const checkoutUrl = fiatLink;
+                if (checkoutUrl) {
+                  window.open(checkoutUrl, '_blank', 'noopener');
+                  setPaymentStatus('Redirected to payment provider...', false);
+                } else {
+                  setPaymentStatus('Missing fiat checkout link.', false);
+                }
+              } else {
+                renderInvoice();
+                startInvoiceWatcher();
+              }
             }
-            if (els.paymentStatus) {
-              els.paymentStatus.textContent = data.payment_request
+            setPaymentStatus(
+              isFiat
                 ? 'Awaiting payment...'
-                : 'Order captured.';
-            }
+                : data.payment_request
+                  ? 'Awaiting payment...'
+                  : 'Order captured.',
+              false
+            );
             toast('Order captured. Complete payment to finish.');
           } catch (err) {
             console.error(err);
-            if (els.paymentStatus) {
-              els.paymentStatus.textContent = 'Unable to start checkout.';
-            }
+            setPaymentStatus('Unable to start checkout.', false);
             toast('Could not start checkout');
+          } finally {
+            state.isPaying = false;
+            renderPayButton();
           }
         }
 
@@ -1540,6 +1612,17 @@
                 .writeText(state.invoice.request)
                 .then(() => toast('Invoice copied to clipboard'))
                 .catch(() => toast('Unable to copy invoice'));
+            });
+            els.invoiceQr.addEventListener('mouseenter', () => {
+              setPaymentStatus('Click QR to copy invoice', false);
+            });
+            els.invoiceQr.addEventListener('mouseleave', () => {
+              setPaymentStatus(
+                state.invoice && state.invoice.request
+                  ? 'Awaiting payment...'
+                  : 'Select a method to continue.',
+                false
+              );
             });
           }
           if (els.detailAddress) {

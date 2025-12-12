@@ -17,6 +17,7 @@ class CreateShop(BaseModel):
     inventory_id: str | None = None
     currency: str = "sat"
     allowed_tags: str | None = None
+    omit_tags: str | None = None
     allow_bitcoin: bool = True
     allow_fiat: bool = True
 
@@ -33,6 +34,7 @@ class Shop(BaseModel):
     inventory_id: str | None = None
     currency: str = "sat"
     allowed_tags: str | None = None
+    omit_tags: str | None = None
     allow_bitcoin: bool = True
     allow_fiat: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -50,6 +52,7 @@ class ShopFilters(FilterModel):
         "inventory_id",
         "currency",
         "allowed_tags",
+        "omit_tags",
         "allow_bitcoin",
         "allow_fiat",
     ]
@@ -64,6 +67,7 @@ class ShopFilters(FilterModel):
         "inventory_id",
         "currency",
         "allowed_tags",
+        "omit_tags",
         "allow_bitcoin",
         "allow_fiat",
         "created_at",
@@ -76,6 +80,7 @@ class ShopFilters(FilterModel):
     allow_fiat: bool | None = None
     currency: str | None = None
     allowed_tags: str | None = None
+    omit_tags: str | None = None
     background_color: str | None = None
 
 
@@ -143,3 +148,11 @@ class ClientDataPaymentRequest(BaseModel):
     client_data_id: str
     payment_request: str | None = None
     payment_hash: str | None = None
+    fiat_payment_request: str | None = None
+    fiat_provider: str | None = None
+    is_fiat: bool = False
+
+
+class PublicClientDataRequest(CreateClientData):
+    payment_method: str | None = None
+    fiat_provider: str | None = None
