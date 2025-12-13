@@ -544,6 +544,10 @@
           font-size: 11px;
           font-weight: 700;
         }
+        .required-pill.optional {
+          background: #e5e7eb;
+          color: var(--muted);
+        }
         .required-pill.hidden {
           display: none;
         }
@@ -584,6 +588,36 @@
           margin-top: 8px;
           font-size: 13px;
           color: var(--muted);
+        }
+        .payment-complete {
+          display: none;
+          text-align: center;
+          color: #065f46;
+          margin-top: 12px;
+          gap: 10px;
+          align-items: center;
+          flex-direction: column;
+        }
+        .payment-complete .complete-icon {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          background: #22c55e;
+          color: #fff;
+          display: grid;
+          place-items: center;
+          font-weight: 900;
+          font-size: 34px;
+          box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.18);
+        }
+        .payment-complete .complete-text {
+          font-weight: 700;
+          font-size: 15px;
+        }
+        .payment-complete .complete-sub {
+          font-size: 13px;
+          color: #065f46;
+          opacity: 0.9;
         }
         .spinner {
           display: inline-block;
@@ -871,6 +905,11 @@
                     style="display: none"
                     title="Click to copy invoice"
                   />
+                  <div class="payment-complete" id="payment-complete" aria-live="polite">
+                    <div class="complete-icon" aria-hidden="true">✓</div>
+                    <div class="complete-text">Payment received. Thank you for your order.</div>
+                    <div class="complete-sub">Order ID <span id="order-id">—</span> (also emailed to you).</div>
+                  </div>
                   <div class="payment-status" id="payment-status">
                     Select a method to continue.
                   </div>
@@ -925,6 +964,7 @@
             email: '',
             number: ''
           },
+          orderId: '',
           checkoutMethod: '',
           isPaying: false,
           invoice: null,
@@ -976,6 +1016,8 @@
           methodBitcoin: document.getElementById('method-bitcoin'),
           methodFiat: document.getElementById('method-fiat'),
           paymentStatus: document.getElementById('payment-status'),
+          paymentComplete: document.getElementById('payment-complete'),
+          orderId: document.getElementById('order-id'),
           invoiceQr: document.getElementById('invoice-qr-img'),
           cartTotalPayval: document.getElementById('cart-total-payval')
         };
@@ -1005,7 +1047,11 @@
           };
           Object.entries(map).forEach(([key, el]) => {
             const needed = req.includes(key);
-            if (el) el.classList.toggle('hidden', !needed);
+            if (el) {
+              el.textContent = needed ? 'Required' : 'Optional';
+              el.classList.toggle('optional', !needed);
+              el.classList.remove('hidden');
+            }
             const inputEl =
               key === 'address'
                 ? els.detailAddress
@@ -1037,25 +1083,33 @@
 
         function renderInvoice() {
           if (!els.invoiceQr) return;
-          if (!state.invoice || !state.invoice.request) {
+          const paid = Boolean(state.invoice && state.invoice.paid);
+          if (!state.invoice || !state.invoice.request || paid) {
             els.invoiceQr.style.display = 'none';
             els.invoiceQr.removeAttribute('src');
-            return;
+          } else {
+            const text = state.invoice.request || '';
+            els.invoiceQr.src = `/api/v1/qrcode/${encodeURIComponent(text)}`;
+            els.invoiceQr.alt = 'Payment QR';
+            els.invoiceQr.style.display = 'block';
           }
-          const text = state.invoice.request || '';
-          els.invoiceQr.src = `/api/v1/qrcode/${encodeURIComponent(text)}`;
-          els.invoiceQr.alt = 'Payment QR';
-          els.invoiceQr.style.display = 'block';
+          if (els.paymentComplete) {
+            els.paymentComplete.style.display = paid ? 'flex' : 'none';
+          }
+          if (els.orderId) {
+            els.orderId.textContent = state.orderId || '—';
+          }
         }
 
         function markInvoicePaid() {
           state.invoice.paid = true;
-          if (els.paymentStatus) els.paymentStatus.textContent = 'Payment received!';
+          if (els.paymentStatus) els.paymentStatus.textContent = '';
+          renderInvoice();
           toast('Payment received');
-          closeModal('cart');
           state.cart = [];
           renderCart();
-          setCheckoutStep(0);
+          updateCheckoutUI();
+          renderPayButton();
           if (state.invoiceSocket) {
             state.invoiceSocket.close();
             state.invoiceSocket = null;
@@ -1121,8 +1175,9 @@
         }
 
         function isFiatCurrency(currency) {
-          const cur = (currency || '').toString().toLowerCase();
-          return cur && !['sat', 'sats', 'btc', 'bitcoin'].includes(cur);
+          const cur = (currency || '').toString().trim().toLowerCase();
+          if (!cur) return false;
+          return !['sat', 'sats', 'btc', 'bitcoin'].includes(cur);
         }
 
         function priceLabel(item) {
@@ -1379,6 +1434,12 @@
         }
 
         function addToCart(item) {
+          if (state.invoice && state.invoice.paid) {
+            state.invoice = null;
+            state.orderId = '';
+            if (els.paymentStatus) els.paymentStatus.textContent = 'Select a method to continue.';
+            renderInvoice();
+          }
           const existing = state.cart.find(i => i.id === item.id);
           const limit =
             typeof item.quantity_in_stock === 'number'
@@ -1471,7 +1532,7 @@
             els.methodFiat.style.display = allowFiat ? 'inline-flex' : 'none';
             els.methodFiat.classList.toggle('is-active', state.checkoutMethod === 'fiat');
             const fiatLabel = isFiatCurrency(state.shop.currency)
-              ? `${state.shop.currency.toUpperCase()} (Stripe)`
+              ? `${state.shop.currency.toUpperCase()}`
               : 'Fiat (Stripe)';
             els.methodFiat.textContent = fiatLabel;
           }
@@ -1484,6 +1545,7 @@
           if (els.detailAddress) els.detailAddress.value = state.checkoutDetails.address || '';
           if (els.detailEmail) els.detailEmail.value = state.checkoutDetails.email || '';
           if (els.detailNumber) els.detailNumber.value = state.checkoutDetails.number || '';
+          renderInvoice();
 
           const totalVal = cartTotalValue();
           if (els.cartTotalPayval) {
@@ -1553,6 +1615,7 @@
             );
             if (!response.ok) throw new Error('Failed to start checkout');
             const data = await response.json();
+            state.orderId = data.client_data_id || state.orderId || '';
             const isFiat = Boolean(data.is_fiat);
             const fiatLink = data.fiat_payment_request || data.payment_request;
             if (data.payment_request || data.fiat_payment_request) {
@@ -1742,6 +1805,10 @@
           }
           if (els.methodFiat) {
             els.methodFiat.addEventListener('click', () => {
+              if (!isFiatCurrency(state.shop.currency)) {
+                toast('Set a shop currency to enable fiat payments');
+                return;
+              }
               state.checkoutMethod = 'fiat';
               updateCheckoutUI();
             });
