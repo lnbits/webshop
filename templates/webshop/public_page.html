@@ -113,12 +113,6 @@
         .section {
           margin-top: 5px;
         }
-        .filters {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          flex-wrap: wrap;
-        }
         .tag-scroll {
           display: flex;
           gap: 10px;
@@ -1595,6 +1589,7 @@
               email: state.checkoutDetails.email || null,
               number: state.checkoutDetails.number || null,
               items: state.cart.map(entry => ({
+                id: entry.id,
                 name: entry.name,
                 quantity: entry.quantity,
                 price: entry.price

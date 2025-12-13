@@ -1,4 +1,3 @@
-# Description: This file contains the extensions API endpoints.
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends

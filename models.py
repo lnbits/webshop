@@ -86,6 +86,7 @@ class ShopFilters(FilterModel):
 
 ########################### Orders (Client Data) ############################
 class CreateClientDataItem(BaseModel):
+    id: str | None = None
     name: str
     quantity: int = Field(ge=1)
     price: float | None = None

@@ -15,6 +15,20 @@ from .models import (
     PublicClientDataRequest,
 )
 
+try:  # inventory extension is optional
+    from ..inventory.crud import (
+        create_inventory_update_log,
+        get_item as inventory_get_item,
+        update_item as inventory_update_item,
+    )
+    from ..inventory.models import CreateInventoryUpdateLog, UpdateSource
+except Exception:  # pragma: no cover
+    create_inventory_update_log = None
+    inventory_get_item = None
+    inventory_update_item = None
+    CreateInventoryUpdateLog = None
+    UpdateSource = None
+
 
 def _parse_required_info(raw: str | None) -> list[str]:
     if not raw:
@@ -135,6 +149,14 @@ async def payment_received_for_client_data(payment: Payment) -> bool:
             return False
         if client_data.paid:
             return True
+        shop = await get_shop_by_id(client_data.shop_id)
+        inventory_id = getattr(shop, "inventory_id", None) if shop else None
+        try:
+            items = json.loads(client_data.items) if isinstance(client_data.items, str) else client_data.items
+        except Exception:
+            items = None
+        if inventory_id and items:
+            await _update_inventory_stock(inventory_id, items, payment)
         client_data.paid = True
         await update_client_data(client_data)
         logger.info(f"Order {client_data_id} marked paid.")
@@ -142,3 +164,46 @@ async def payment_received_for_client_data(payment: Payment) -> bool:
     except Exception as exc:  # pragma: no cover
         logger.error(f"Error marking order paid: {exc}")
         return False
+
+
+async def _update_inventory_stock(inventory_id: str, items: list | None, payment: Payment) -> None:
+    if (
+        not inventory_get_item
+        or not inventory_update_item
+        or not create_inventory_update_log
+        or not CreateInventoryUpdateLog
+        or not UpdateSource
+    ):
+        return
+
+    for raw in items or []:
+        data = raw.dict() if hasattr(raw, "dict") else raw or {}
+        item_id = data.get("id")
+        quantity = int(data.get("quantity") or 0)
+        if not item_id or quantity <= 0:
+            continue
+
+        item = await inventory_get_item(item_id)
+        if not item or item.inventory_id != inventory_id:
+            continue
+        if item.quantity_in_stock is None:
+            continue
+
+        quantity_before = item.quantity_in_stock
+        deduction = min(quantity, quantity_before)
+        if deduction <= 0:
+            continue
+
+        item.quantity_in_stock = quantity_before - deduction
+        await inventory_update_item(item)
+        await create_inventory_update_log(
+            CreateInventoryUpdateLog(
+                inventory_id=inventory_id,
+                item_id=item.id,
+                quantity_change=-deduction,
+                quantity_before=quantity_before,
+                quantity_after=item.quantity_in_stock,
+                source=UpdateSource.SYSTEM,
+                idempotency_key=f"{payment.payment_hash}:{item.id}",
+            )
+        )
