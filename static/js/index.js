@@ -19,7 +19,6 @@ window.app = Vue.createApp({
         show: false,
         data: {
           name: null,
-          description: null,
           primary_color: null,
           secondary_color: null,
           background_color: '#f6f7f9',
@@ -27,11 +26,17 @@ window.app = Vue.createApp({
           currency: 'sat',
           allowed_tags: [],
           omit_tags: [],
+          required_customer_info: [],
           wallet: null,
           allow_bitcoin: true,
           allow_fiat: true
         }
       },
+      customerInfoOptions: [
+        {label: 'Shipping address', value: 'address'},
+        {label: 'Email', value: 'email'},
+        {label: 'Number', value: 'number'}
+      ],
       shopList: [],
       shopTable: {
         search: '',
@@ -42,13 +47,6 @@ window.app = Vue.createApp({
             align: 'left',
             label: 'Name',
             field: 'name',
-            sortable: true
-          },
-          {
-            name: 'description',
-            align: 'left',
-            label: 'Description',
-            field: 'description',
             sortable: true
           },
           {
@@ -225,7 +223,6 @@ window.app = Vue.createApp({
     async showNewShopForm() {
       this.shopFormDialog.data = {
         name: null,
-        description: null,
         primary_color: null,
         secondary_color: null,
         background_color: '#f6f7f9',
@@ -233,6 +230,7 @@ window.app = Vue.createApp({
         currency: this.defaultInventoryCurrency || 'sat',
         allowed_tags: [...this.inventoryTagOptions],
         omit_tags: [...this.inventoryOmitTagOptions],
+        required_customer_info: [],
         wallet: this.g?.user?.wallets?.[0]?.id || null,
         allow_bitcoin: true,
         allow_fiat: true
@@ -268,6 +266,15 @@ window.app = Vue.createApp({
               .filter(Boolean)
           : [...this.inventoryOmitTagOptions]
       }
+      if (!Array.isArray(this.shopFormDialog.data.required_customer_info)) {
+        this.shopFormDialog.data.required_customer_info =
+          this.shopFormDialog.data.required_customer_info
+            ? this.shopFormDialog.data.required_customer_info
+                .split(',')
+                .map(t => t.trim())
+                .filter(Boolean)
+            : []
+      }
       this.shopFormDialog.show = true
     },
     async saveShop() {
@@ -284,6 +291,9 @@ window.app = Vue.createApp({
         }
         if (Array.isArray(data.omit_tags)) {
           data.omit_tags = data.omit_tags.join(',')
+        }
+        if (Array.isArray(data.required_customer_info)) {
+          data.required_customer_info = data.required_customer_info.join(',')
         }
         const method = data.id ? 'PUT' : 'POST'
         const entry = data.id ? `/${data.id}` : ''

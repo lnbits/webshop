@@ -266,15 +266,6 @@
         dense
         v-model.trim="shopFormDialog.data.name"
         label="Name"
-        hint=" "
-      ></q-input>
-
-      <q-input
-        filled
-        dense
-        v-model.trim="shopFormDialog.data.description"
-        label="Description"
-        hint=" "
       ></q-input>
 
       <div class="row q-col-gutter-md">
@@ -285,7 +276,6 @@
             type="color"
             v-model.trim="shopFormDialog.data.primary_color"
             label="Primary Color"
-            hint=" "
           ></q-input>
         </div>
         <div class="col-12 col-sm-4">
@@ -295,7 +285,6 @@
             type="color"
             v-model.trim="shopFormDialog.data.secondary_color"
             label="Secondary Color"
-            hint=" "
           ></q-input>
         </div>
         <div class="col-12 col-sm-4">
@@ -305,7 +294,6 @@
             type="color"
             v-model.trim="shopFormDialog.data.background_color"
             label="Background Color"
-            hint=" "
           ></q-input>
         </div>
       </div>
@@ -330,6 +318,18 @@
         :options="inventoryOmitTagOptions"
         label="Omit Tags"
         hint="Products with these omit tags won't be included."
+      ></q-select>
+      <q-select
+        filled
+        dense
+        multiple
+        emit-value
+        map-options
+        use-chips
+        v-model="shopFormDialog.data.required_customer_info"
+        :options="customerInfoOptions"
+        label="Customer info"
+        hint="Select the customer details required to place an order."
       ></q-select>
       <div class="row q-col-gutter-md">
         <div class="col-12 col-sm-6">

@@ -9,7 +9,6 @@ from pydantic import BaseModel, EmailStr, Field
 ########################### Shop ############################
 class CreateShop(BaseModel):
     name: str
-    description: str
     primary_color: str
     secondary_color: str
     background_color: str | None = None
@@ -20,13 +19,13 @@ class CreateShop(BaseModel):
     omit_tags: str | None = None
     allow_bitcoin: bool = True
     allow_fiat: bool = True
+    required_customer_info: str | None = None
 
 
 class Shop(BaseModel):
     id: str
     user_id: str
     name: str
-    description: str
     primary_color: str
     wallet: str
     secondary_color: str
@@ -37,6 +36,7 @@ class Shop(BaseModel):
     omit_tags: str | None = None
     allow_bitcoin: bool = True
     allow_fiat: bool = True
+    required_customer_info: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -44,7 +44,6 @@ class Shop(BaseModel):
 class ShopFilters(FilterModel):
     __search_fields__ = [
         "name",
-        "description",
         "primary_color",
         "secondary_color",
         "background_color",
@@ -55,11 +54,11 @@ class ShopFilters(FilterModel):
         "omit_tags",
         "allow_bitcoin",
         "allow_fiat",
+        "required_customer_info",
     ]
 
     __sort_fields__ = [
         "name",
-        "description",
         "primary_color",
         "secondary_color",
         "background_color",
@@ -72,6 +71,7 @@ class ShopFilters(FilterModel):
         "allow_fiat",
         "created_at",
         "updated_at",
+        "required_customer_info",
     ]
 
     created_at: datetime | None

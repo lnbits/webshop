@@ -161,7 +161,12 @@ async def api_submit_public_client_data(
     data: PublicClientDataRequest,
 ) -> ClientDataPaymentRequest | None:
 
-    return await payment_request_for_client_data(shop_id, data, data.payment_method, data.fiat_provider)
+    try:
+        return await payment_request_for_client_data(
+            shop_id, data, data.payment_method, data.fiat_provider
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(exc))
 
 
 @webshop_api_router.put(

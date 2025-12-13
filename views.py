@@ -40,7 +40,6 @@ async def shop_public_page(req: Request, shop_id: str):
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Shop does not exist.")
 
     public_page_name = getattr(shop, "name", "")
-    public_page_description = getattr(shop, "description", "")
     shop_data = shop.dict()
     if shop_data.get("created_at"):
         shop_data["created_at"] = shop_data["created_at"].isoformat()
@@ -54,6 +53,5 @@ async def shop_public_page(req: Request, shop_id: str):
             "shop_id": shop_id,
             "shop": shop_data,
             "public_page_name": public_page_name,
-            "public_page_description": public_page_description,
         },
     )

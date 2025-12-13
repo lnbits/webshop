@@ -16,6 +16,29 @@ from .models import (
 )
 
 
+def _parse_required_info(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    if isinstance(raw, list):
+        return [str(x).strip().lower() for x in raw if str(x).strip()]
+    return [part.strip().lower() for part in str(raw).split(",") if part.strip()]
+
+
+def _validate_required_fields(required: list[str], data: PublicClientDataRequest) -> None:
+    def _empty(val: str | None) -> bool:
+        return val is None or str(val).strip() == ""
+
+    missing = []
+    if "address" in required and _empty(data.address):
+        missing.append("address")
+    if "email" in required and _empty(data.email):
+        missing.append("email")
+    if "number" in required and _empty(data.number):
+        missing.append("number")
+    if missing:
+        raise ValueError(f"Missing required customer info: {', '.join(missing)}.")
+
+
 async def payment_request_for_client_data(
     shop_id: str,
     data: PublicClientDataRequest,
@@ -26,6 +49,9 @@ async def payment_request_for_client_data(
     shop = await get_shop_by_id(shop_id)
     if not shop:
         raise ValueError("Invalid shop ID.")
+
+    required_info = _parse_required_info(getattr(shop, "required_customer_info", None))
+    _validate_required_fields(required_info, data)
 
     client_data = await create_client_data(shop_id, data)
     # Calculate invoice amount in the shop currency (defaults to sat)

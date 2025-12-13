@@ -528,6 +528,25 @@
           color: var(--muted);
           font-size: 13px;
         }
+        .form-field span {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: var(--ink);
+        }
+        .required-pill {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 6px;
+          border-radius: 10px;
+          background: #fee2e2;
+          color: #b91c1c;
+          font-size: 11px;
+          font-weight: 700;
+        }
+        .required-pill.hidden {
+          display: none;
+        }
         .form-field input,
         .form-field textarea {
           border: 1px solid var(--border);
@@ -787,14 +806,14 @@
               <div class="pane-body">
                 <div class="form-grid">
                   <label class="form-field">
-                    <span>Address (optional)</span>
+                    <span>Address <span class="required-pill hidden" id="required-address">Required</span></span>
                     <textarea
                       id="detail-address"
                       placeholder="Shipping address"
                     ></textarea>
                   </label>
                   <label class="form-field">
-                    <span>Email (optional)</span>
+                    <span>Email <span class="required-pill hidden" id="required-email">Required</span></span>
                     <input
                       type="email"
                       id="detail-email"
@@ -802,7 +821,7 @@
                     />
                   </label>
                   <label class="form-field">
-                    <span>Phone / number (optional)</span>
+                    <span>Phone / number <span class="required-pill hidden" id="required-number">Required</span></span>
                     <input
                       type="text"
                       id="detail-number"
@@ -951,6 +970,9 @@
           detailAddress: document.getElementById('detail-address'),
           detailEmail: document.getElementById('detail-email'),
           detailNumber: document.getElementById('detail-number'),
+          requiredAddress: document.getElementById('required-address'),
+          requiredEmail: document.getElementById('required-email'),
+          requiredNumber: document.getElementById('required-number'),
           methodBitcoin: document.getElementById('method-bitcoin'),
           methodFiat: document.getElementById('method-fiat'),
           paymentStatus: document.getElementById('payment-status'),
@@ -972,6 +994,45 @@
           } else {
             els.paymentStatus.textContent = message;
           }
+        }
+
+        function updateRequiredLabels() {
+          const req = requiredFields();
+          const map = {
+            address: els.requiredAddress,
+            email: els.requiredEmail,
+            number: els.requiredNumber
+          };
+          Object.entries(map).forEach(([key, el]) => {
+            const needed = req.includes(key);
+            if (el) el.classList.toggle('hidden', !needed);
+            const inputEl =
+              key === 'address'
+                ? els.detailAddress
+                : key === 'email'
+                  ? els.detailEmail
+                  : els.detailNumber;
+            if (inputEl) {
+              inputEl.required = needed;
+              inputEl.setAttribute('aria-required', needed ? 'true' : 'false');
+            }
+          });
+        }
+
+        function validateCustomerInfo() {
+          const req = requiredFields();
+          const missing = [];
+          const address = (state.checkoutDetails.address || '').trim();
+          const email = (state.checkoutDetails.email || '').trim();
+          const number = (state.checkoutDetails.number || '').trim();
+          if (req.includes('address') && !address) missing.push('shipping address');
+          if (req.includes('email') && !email) missing.push('email');
+          if (req.includes('number') && !number) missing.push('number');
+          if (missing.length) {
+            toast(`Please provide: ${missing.join(', ')}`);
+            return false;
+          }
+          return true;
         }
 
         function renderInvoice() {
@@ -1042,6 +1103,26 @@
 
         function currencyLabel() {
           return state.shop.currency || 'sat';
+        }
+
+        function parseRequiredInfo(raw) {
+          if (!raw) return [];
+          if (Array.isArray(raw)) {
+            return raw.map(v => String(v).trim().toLowerCase()).filter(Boolean);
+          }
+          return String(raw || '')
+            .split(',')
+            .map(v => v.trim().toLowerCase())
+            .filter(Boolean);
+        }
+
+        function requiredFields() {
+          return parseRequiredInfo(state.shop.required_customer_info);
+        }
+
+        function isFiatCurrency(currency) {
+          const cur = (currency || '').toString().toLowerCase();
+          return cur && !['sat', 'sats', 'btc', 'bitcoin'].includes(cur);
         }
 
         function priceLabel(item) {
@@ -1381,7 +1462,7 @@
           }
 
           const allowBitcoin = state.shop.allow_bitcoin !== false;
-          const allowFiat = state.shop.allow_fiat !== false;
+          const allowFiat = state.shop.allow_fiat !== false && isFiatCurrency(state.shop.currency);
           if (els.methodBitcoin) {
             els.methodBitcoin.style.display = allowBitcoin ? 'inline-flex' : 'none';
             els.methodBitcoin.classList.toggle('is-active', state.checkoutMethod === 'bitcoin');
@@ -1389,6 +1470,10 @@
           if (els.methodFiat) {
             els.methodFiat.style.display = allowFiat ? 'inline-flex' : 'none';
             els.methodFiat.classList.toggle('is-active', state.checkoutMethod === 'fiat');
+            const fiatLabel = isFiatCurrency(state.shop.currency)
+              ? `${state.shop.currency.toUpperCase()} (Stripe)`
+              : 'Fiat (Stripe)';
+            els.methodFiat.textContent = fiatLabel;
           }
           if (!allowBitcoin && state.checkoutMethod === 'bitcoin') state.checkoutMethod = '';
           if (!allowFiat && state.checkoutMethod === 'fiat') state.checkoutMethod = '';
@@ -1405,6 +1490,7 @@
             els.cartTotalPayval.textContent = `${formatAmount(totalVal)} ${currencyLabel()}`;
           }
           renderPayButton();
+          updateRequiredLabels();
         }
 
         function renderPayButton() {
@@ -1427,6 +1513,9 @@
           }
           if (!state.cart.length) {
             toast('Cart is empty');
+            return;
+          }
+          if (!validateCustomerInfo()) {
             return;
           }
           state.isPaying = true;
@@ -1587,7 +1676,9 @@
             els.checkoutTabs.addEventListener('click', e => {
               const btn = e.target.closest('button[data-step]');
               if (!btn) return;
-              setCheckoutStep(Number(btn.dataset.step));
+              const target = Number(btn.dataset.step);
+              if (target === 2 && !validateCustomerInfo()) return;
+              setCheckoutStep(target);
             });
           }
           if (els.checkoutNext) {
@@ -1597,7 +1688,10 @@
             els.detailsBack.addEventListener('click', () => setCheckoutStep(0));
           }
           if (els.detailsNext) {
-            els.detailsNext.addEventListener('click', () => setCheckoutStep(2));
+            els.detailsNext.addEventListener('click', () => {
+              if (!validateCustomerInfo()) return;
+              setCheckoutStep(2);
+            });
           }
           if (els.paymentBack) {
             els.paymentBack.addEventListener('click', () => setCheckoutStep(1));
@@ -1735,6 +1829,8 @@
           if (state.shop.allow_fiat === undefined) state.shop.allow_fiat = true;
           setTheme();
           attachEvents();
+          updateRequiredLabels();
+          updateCheckoutUI();
           renderCart();
           fetchProducts();
         }
