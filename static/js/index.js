@@ -264,7 +264,7 @@ window.app = Vue.createApp({
               .split(',')
               .map(t => t.trim())
               .filter(Boolean)
-          : [...this.inventoryOmitTagOptions]
+          : []
       }
       if (!Array.isArray(this.shopFormDialog.data.required_customer_info)) {
         this.shopFormDialog.data.required_customer_info = this.shopFormDialog

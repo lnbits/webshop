@@ -1857,11 +1857,17 @@
             const payload = await response.json();
             state.products = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
             state.tags = ['__all'];
+            const allowedTags = parseTags(state.shop.allowed_tags);
+            const omitTags = parseTags(state.shop.omit_tags);
             state.products.forEach(item => {
               const itemTags = tagsFor(item);
               const lower = tagsLowerFor(item);
               lower.forEach(tag => {
-                if (tag && !state.tags.includes(tag)) state.tags.push(tag);
+                const allowedOk = !allowedTags.length || allowedTags.includes(tag);
+                const notOmitted = !omitTags.length || !omitTags.includes(tag);
+                if (tag && allowedOk && notOmitted && !state.tags.includes(tag)) {
+                  state.tags.push(tag);
+                }
               });
             });
             renderTags();
