@@ -1,5 +1,7 @@
 from http import HTTPStatus
+from typing import Any
 
+import httpx
 from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from lnbits.core.models import SimpleStatus, User
@@ -8,7 +10,8 @@ from lnbits.decorators import (
     check_user_exists,
     parse_filters,
 )
-from lnbits.helpers import generate_filter_params_openapi
+from lnbits.helpers import create_access_token, generate_filter_params_openapi
+from lnbits.settings import settings
 
 from .crud import (
     create_client_data,
@@ -42,6 +45,81 @@ client_data_filters = parse_filters(ClientDataFilters)
 
 webshop_api_router = APIRouter()
 
+def _to_csv(value: list[str] | str | None) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        cleaned = value.strip()
+        return cleaned or None
+    cleaned_values = [str(item).strip() for item in value if str(item).strip()]
+    return ",".join(cleaned_values) if cleaned_values else None
+
+
+def _from_csv(value: str | list[str] | None) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    parts = [part.strip() for part in str(value).split(",")]
+    return [part for part in parts if part]
+
+
+def _inventory_available_for_user(user: User | None) -> bool:
+    return bool(user and "inventory" in (user.extensions or []))
+
+
+async def _get_default_inventory(user_id: str) -> dict[str, Any] | None:
+    access = create_access_token({"sub": "", "usr": user_id}, token_expire_minutes=1)
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            url=f"http://{settings.host}:{settings.port}/inventory/api/v1",
+            headers={"Authorization": f"Bearer {access}"},
+        )
+        inventory = resp.json()
+    if not inventory:
+        return None
+    if isinstance(inventory, list):
+        inventory = inventory[0] if inventory else None
+    if not isinstance(inventory, dict):
+        return None
+    inventory["tags"] = _from_csv(inventory.get("tags"))
+    inventory["omit_tags"] = _from_csv(inventory.get("omit_tags"))
+    return inventory
+
+
+async def _prepare_shop_payload(data: CreateShop, user: User) -> CreateShop:
+    payload = data.dict()
+    payload["allowed_tags"] = _to_csv(payload.get("allowed_tags"))
+    payload["omit_tags"] = _to_csv(payload.get("omit_tags"))
+    payload["required_customer_info"] = _to_csv(payload.get("required_customer_info"))
+    if _inventory_available_for_user(user):
+        inventory = await _get_default_inventory(user.id)
+        if inventory and not payload.get("inventory_id"):
+            payload["inventory_id"] = inventory.get("id")
+    return CreateShop(**payload)
+
+
+@webshop_api_router.get("/api/v1/inventory/status", status_code=HTTPStatus.OK)
+async def api_inventory_status(
+    user: User = Depends(check_user_exists),
+) -> dict[str, Any]:
+    if not _inventory_available_for_user(user):
+        return {
+            "enabled": False,
+            "inventory_id": None,
+            "tags": [],
+            "omit_tags": [],
+            "currency": None,
+        }
+    inventory = await _get_default_inventory(user.id)
+    return {
+        "enabled": True,
+        "inventory_id": inventory.get("id") if inventory else None,
+        "tags": inventory.get("tags") if inventory else [],
+        "omit_tags": inventory.get("omit_tags") if inventory else [],
+        "currency": inventory.get("currency") if inventory else None,
+    }
+
 
 ############################# Shop #############################
 @webshop_api_router.post("/api/v1/shop", status_code=HTTPStatus.CREATED)
@@ -49,7 +127,8 @@ async def api_create_shop(
     data: CreateShop,
     user: User = Depends(check_user_exists),
 ) -> Shop:
-    shop = await create_shop(user.id, data)
+    shop_payload = await _prepare_shop_payload(data, user)
+    shop = await create_shop(user.id, shop_payload)
     return shop
 
 
@@ -64,7 +143,8 @@ async def api_update_shop(
         raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
     if shop.user_id != user.id:
         raise HTTPException(HTTPStatus.FORBIDDEN, "You do not own this shop.")
-    shop = await update_shop(Shop(**{**shop.dict(), **data.dict()}))
+    shop_payload = await _prepare_shop_payload(data, user)
+    shop = await update_shop(Shop(**{**shop.dict(), **shop_payload.dict()}))
     return shop
 
 

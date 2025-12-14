@@ -1,9 +1,13 @@
 import json
 
+import httpx
+from lnbits.core.crud import get_wallet
 from lnbits.core.models import CreateInvoice, Payment
 from lnbits.core.services import create_payment_request
+from lnbits.helpers import create_access_token
+from lnbits.settings import settings
 from loguru import logger
-
+from lnbits.core.services import websocket_updater
 from .crud import (
     create_client_data,
     get_client_data_by_id,
@@ -13,21 +17,8 @@ from .crud import (
 from .models import (
     ClientDataPaymentRequest,  #
     PublicClientDataRequest,
+    Shop,
 )
-
-try:  # inventory extension is optional
-    from ..inventory.crud import (
-        create_inventory_update_log,
-        get_item as inventory_get_item,
-        update_item as inventory_update_item,
-    )
-    from ..inventory.models import CreateInventoryUpdateLog, UpdateSource
-except Exception:  # pragma: no cover
-    create_inventory_update_log = None
-    inventory_get_item = None
-    inventory_update_item = None
-    CreateInventoryUpdateLog = None
-    UpdateSource = None
 
 
 def _parse_required_info(raw: str | None) -> list[str]:
@@ -134,76 +125,46 @@ async def payment_request_for_client_data(
 
 
 async def payment_received_for_client_data(payment: Payment) -> bool:
-    """
-    Mark an order as paid when invoice is settled.
-    Expect payment.extra to carry {"tag": "webshop", "client_data_id": "..."}.
-    """
     try:
-        if payment.extra.get("tag") != "webshop":
-            return False
-        client_data_id = payment.extra.get("client_data_id")
-        if not client_data_id:
-            return False
-        client_data = await get_client_data_by_id(client_data_id)
-        if not client_data:
-            return False
+        client_data = await get_client_data_by_id(payment.extra.get("client_data_id"))
         if client_data.paid:
-            return True
-        shop = await get_shop_by_id(client_data.shop_id)
-        inventory_id = getattr(shop, "inventory_id", None) if shop else None
-        try:
-            items = json.loads(client_data.items) if isinstance(client_data.items, str) else client_data.items
-        except Exception:
-            items = None
-        if inventory_id and items:
-            await _update_inventory_stock(inventory_id, items, payment)
+            return
         client_data.paid = True
         await update_client_data(client_data)
-        logger.info(f"Order {client_data_id} marked paid.")
-        return True
+        await websocket_updater("webshop" + payment.payment_hash, "paid")
+        shop = await get_shop_by_id(client_data.shop_id)
+        inventory_id = getattr(shop, "inventory_id", None) if shop else None
+        items = json.loads(client_data.items) if isinstance(client_data.items, str) else client_data.items
+        await _deduct_inventory_stock(shop.user_id, inventory_id, items)
+        return
     except Exception as exc:  # pragma: no cover
         logger.error(f"Error marking order paid: {exc}")
-        return False
-
-
-async def _update_inventory_stock(inventory_id: str, items: list | None, payment: Payment) -> None:
-    if (
-        not inventory_get_item
-        or not inventory_update_item
-        or not create_inventory_update_log
-        or not CreateInventoryUpdateLog
-        or not UpdateSource
-    ):
         return
 
+
+async def _deduct_inventory_stock(user_id: str, inventory_id: str, items: list | None) -> None:
+
+    ids: list[str] = []
+    quantities: list[int] = []
     for raw in items or []:
         data = raw.dict() if hasattr(raw, "dict") else raw or {}
         item_id = data.get("id")
         quantity = int(data.get("quantity") or 0)
         if not item_id or quantity <= 0:
             continue
+        ids.append(item_id)
+        quantities.append(quantity)
 
-        item = await inventory_get_item(item_id)
-        if not item or item.inventory_id != inventory_id:
-            continue
-        if item.quantity_in_stock is None:
-            continue
+    if not ids:
+        return
 
-        quantity_before = item.quantity_in_stock
-        deduction = min(quantity, quantity_before)
-        if deduction <= 0:
-            continue
-
-        item.quantity_in_stock = quantity_before - deduction
-        await inventory_update_item(item)
-        await create_inventory_update_log(
-            CreateInventoryUpdateLog(
-                inventory_id=inventory_id,
-                item_id=item.id,
-                quantity_change=-deduction,
-                quantity_before=quantity_before,
-                quantity_after=item.quantity_in_stock,
-                source=UpdateSource.SYSTEM,
-                idempotency_key=f"{payment.payment_hash}:{item.id}",
+    access = create_access_token({"sub": "", "usr": user_id}, token_expire_minutes=1)
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.patch(
+                url=f"http://{settings.host}:{settings.port}/inventory/api/v1/items/{inventory_id}/quantities",
+                headers={"Authorization": f"Bearer {access}"},
+                params={"ids": ids, "quantities": quantities},
             )
-        )
+    except Exception as exc:  # pragma: no cover
+        logger.error(f"Error notifying inventory extension: {exc}")

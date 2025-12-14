@@ -17,9 +17,6 @@ async def wait_for_paid_invoices():
 async def on_invoice_paid(payment: Payment) -> None:
     if payment.extra.get("tag") != "webshop":
         return
-
-    logger.info(f"Invoice paid for webshop: {payment.payment_hash}")
-
     try:
         await payment_received_for_client_data(payment)
     except Exception as e:
