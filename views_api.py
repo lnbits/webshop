@@ -42,8 +42,8 @@ from .services import (
 
 shop_filters = parse_filters(ShopFilters)
 client_data_filters = parse_filters(ClientDataFilters)
-
 webshop_api_router = APIRouter()
+
 
 def _to_csv(value: list[str] | str | None) -> str | None:
     if value is None:
@@ -241,11 +241,9 @@ async def api_submit_public_client_data(
 ) -> ClientDataPaymentRequest | None:
 
     try:
-        return await payment_request_for_client_data(
-            shop_id, data, data.payment_method, data.fiat_provider
-        )
+        return await payment_request_for_client_data(shop_id, data, data.payment_method, data.fiat_provider)
     except ValueError as exc:
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(exc))
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(exc)) from exc
 
 
 @webshop_api_router.put(

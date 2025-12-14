@@ -1,13 +1,12 @@
 import json
 
 import httpx
-from lnbits.core.crud import get_wallet
 from lnbits.core.models import CreateInvoice, Payment
 from lnbits.core.services import create_payment_request
 from lnbits.helpers import create_access_token
 from lnbits.settings import settings
 from loguru import logger
-from lnbits.core.services import websocket_updater
+
 from .crud import (
     create_client_data,
     get_client_data_by_id,
@@ -17,7 +16,6 @@ from .crud import (
 from .models import (
     ClientDataPaymentRequest,  #
     PublicClientDataRequest,
-    Shop,
 )
 
 
@@ -88,9 +86,6 @@ async def payment_request_for_client_data(
 
     amount = float(amount or 0.0)
 
-    # Build invoice request using core's create_payment_request (supports fiat or LN)
-    from lnbits.settings import settings  # local import to avoid cycles
-
     providers = settings.get_fiat_providers_for_user(getattr(shop, "user_id", None))
     chosen_fiat_provider = None
     unit = currency
@@ -131,7 +126,6 @@ async def payment_received_for_client_data(payment: Payment) -> bool:
             return
         client_data.paid = True
         await update_client_data(client_data)
-        await websocket_updater("webshop" + payment.payment_hash, "paid")
         shop = await get_shop_by_id(client_data.shop_id)
         inventory_id = getattr(shop, "inventory_id", None) if shop else None
         items = json.loads(client_data.items) if isinstance(client_data.items, str) else client_data.items

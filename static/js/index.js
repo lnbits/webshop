@@ -267,13 +267,13 @@ window.app = Vue.createApp({
           : [...this.inventoryOmitTagOptions]
       }
       if (!Array.isArray(this.shopFormDialog.data.required_customer_info)) {
-        this.shopFormDialog.data.required_customer_info =
-          this.shopFormDialog.data.required_customer_info
-            ? this.shopFormDialog.data.required_customer_info
-                .split(',')
-                .map(t => t.trim())
-                .filter(Boolean)
-            : []
+        this.shopFormDialog.data.required_customer_info = this.shopFormDialog
+          .data.required_customer_info
+          ? this.shopFormDialog.data.required_customer_info
+              .split(',')
+              .map(t => t.trim())
+              .filter(Boolean)
+          : []
       }
       this.shopFormDialog.show = true
     },

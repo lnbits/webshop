@@ -6,6 +6,7 @@ from loguru import logger
 
 from .services import payment_received_for_client_data
 
+
 async def wait_for_paid_invoices():
     invoice_queue = asyncio.Queue()
     register_invoice_listener(invoice_queue, "ext_webshop")
