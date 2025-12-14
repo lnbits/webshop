@@ -16,10 +16,11 @@ from .crud import (
 from .models import (
     ClientDataPaymentRequest,  #
     PublicClientDataRequest,
+    Shop,
 )
 
 
-def _parse_required_info(raw: str | None) -> list[str]:
+def _parse_required_info(raw: str | list[str] | None) -> list[str]:
     if not raw:
         return []
     if isinstance(raw, list):
@@ -86,7 +87,7 @@ async def payment_request_for_client_data(
 
     amount = float(amount or 0.0)
 
-    providers = settings.get_fiat_providers_for_user(getattr(shop, "user_id", None))
+    providers = settings.get_fiat_providers_for_user(shop.user_id)
     chosen_fiat_provider = None
     unit = currency
     if payment_method == "fiat" and getattr(shop, "allow_fiat", True):
@@ -120,24 +121,37 @@ async def payment_request_for_client_data(
 
 
 async def payment_received_for_client_data(payment: Payment) -> bool:
+    extra = payment.extra or {}
+    if extra.get("tag") != "webshop":
+        return False
+    client_data_id = extra.get("client_data_id")
+    if not isinstance(client_data_id, str):
+        return False
+
     try:
-        client_data = await get_client_data_by_id(payment.extra.get("client_data_id"))
+        client_data = await get_client_data_by_id(client_data_id)
+        if not client_data:
+            return False
         if client_data.paid:
-            return
+            return True
+        shop = await get_shop_by_id(client_data.shop_id)
+        items_raw = json.loads(client_data.items) if isinstance(client_data.items, str) else client_data.items
+        items: list | None = items_raw if isinstance(items_raw, list) else None
+        if shop and shop.inventory_id and items:
+            await _deduct_inventory_stock(shop, items)
         client_data.paid = True
         await update_client_data(client_data)
-        shop = await get_shop_by_id(client_data.shop_id)
-        inventory_id = getattr(shop, "inventory_id", None) if shop else None
-        items = json.loads(client_data.items) if isinstance(client_data.items, str) else client_data.items
-        await _deduct_inventory_stock(shop.user_id, inventory_id, items)
-        return
+        return True
     except Exception as exc:  # pragma: no cover
         logger.error(f"Error marking order paid: {exc}")
+        return False
+    return False
+
+
+async def _deduct_inventory_stock(shop: Shop, items: list | None) -> None:
+
+    if not shop.inventory_id:
         return
-
-
-async def _deduct_inventory_stock(user_id: str, inventory_id: str, items: list | None) -> None:
-
     ids: list[str] = []
     quantities: list[int] = []
     for raw in items or []:
@@ -152,11 +166,11 @@ async def _deduct_inventory_stock(user_id: str, inventory_id: str, items: list |
     if not ids:
         return
 
-    access = create_access_token({"sub": "", "usr": user_id}, token_expire_minutes=1)
+    access = create_access_token({"sub": "", "usr": shop.user_id}, token_expire_minutes=1)
     try:
         async with httpx.AsyncClient() as client:
             await client.patch(
-                url=f"http://{settings.host}:{settings.port}/inventory/api/v1/items/{inventory_id}/quantities",
+                url=f"http://{settings.host}:{settings.port}/inventory/api/v1/items/{shop.inventory_id}/quantities",
                 headers={"Authorization": f"Bearer {access}"},
                 params={"ids": ids, "quantities": quantities},
             )
