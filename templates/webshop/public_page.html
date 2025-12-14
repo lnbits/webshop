@@ -306,9 +306,9 @@
         inset: 0;
         background: transparent;
         display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
-          padding: 16px;
+          padding: 32px 16px;
           z-index: 50;
           opacity: 0;
           pointer-events: none;
@@ -639,6 +639,29 @@
         .invoice-box img {
           max-width: 220px;
         }
+        .invoice-copy-row {
+          margin-top: 6px;
+          display: none;
+          gap: 8px;
+          align-items: center;
+          width: 100%;
+        }
+        .invoice-copy-row input {
+          flex: 1;
+          font-family: monospace;
+          font-size: 12px;
+          padding: 8px 10px;
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--border);
+          background: #f8fafc;
+          color: var(--ink);
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .invoice-copy-row button {
+          white-space: nowrap;
+          font-weight: 700;
+        }
         .cart-row {
           display: grid;
           grid-template-columns: 1fr auto;
@@ -677,6 +700,7 @@
           transition: opacity 160ms ease, transform 160ms ease;
           z-index: 100;
           font-weight: 700;
+          pointer-events: none;
         }
         .toast.is-visible {
           opacity: 1;
@@ -931,6 +955,17 @@
                   <div class="payment-status" id="payment-status">
                     Select a method to continue.
                   </div>
+                  <div class="invoice-copy-row" id="invoice-copy-row">
+                    <input
+                      id="invoice-text"
+                      type="text"
+                      readonly
+                      aria-label="Payment invoice (bolt11 / request)"
+                    />
+                    <button class="btn-ghost" id="invoice-copy-btn">
+                      Copy invoice
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="cart-footer-row">
@@ -975,7 +1010,8 @@
           modalImages: [],
           modalIndex: 0,
           page: 1,
-          pageSize: 20,
+          pageSize: 8,
+          totalItems: 0,
           checkoutStep: 0,
           checkoutDetails: {
             address: '',
@@ -986,7 +1022,8 @@
           checkoutMethod: '',
           isPaying: false,
           invoice: null,
-          invoiceSocket: null
+          invoiceSocket: null,
+          pendingItemId: ''
         };
 
         const els = {
@@ -1037,6 +1074,9 @@
           paymentComplete: document.getElementById('payment-complete'),
           orderId: document.getElementById('order-id'),
           invoiceQr: document.getElementById('invoice-qr-img'),
+          invoiceCopyRow: document.getElementById('invoice-copy-row'),
+          invoiceCopyInput: document.getElementById('invoice-text'),
+          invoiceCopyBtn: document.getElementById('invoice-copy-btn'),
           cartTotalPayval: document.getElementById('cart-total-payval')
         };
 
@@ -1117,6 +1157,14 @@
           if (els.orderId) {
             els.orderId.textContent = state.orderId || '—';
           }
+          if (els.invoiceCopyRow) {
+            const showCopy = Boolean(state.invoice && state.invoice.request && !paid);
+            els.invoiceCopyRow.style.display = showCopy ? 'flex' : 'none';
+          }
+          if (els.invoiceCopyInput) {
+            const text = state.invoice && state.invoice.request && !paid ? state.invoice.request : '';
+            els.invoiceCopyInput.value = text;
+          }
         }
 
         function markInvoicePaid() {
@@ -1132,6 +1180,45 @@
             state.invoiceSocket.close();
             state.invoiceSocket = null;
           }
+        }
+
+        function legacyCopy(text) {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          textarea.setSelectionRange(0, textarea.value.length);
+          const ok = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          return ok;
+        }
+
+        async function copyInvoice() {
+          if (!state.invoice || !state.invoice.request) return;
+          const text = state.invoice.request;
+          try {
+            await navigator.clipboard.writeText(text);
+            toast('Invoice copied to clipboard');
+            return;
+          } catch (err) {
+            try {
+              const ok = legacyCopy(text);
+              if (ok) {
+                toast('Invoice copied to clipboard');
+                return;
+              }
+            } catch (err2) {
+              /* ignore */
+            }
+          }
+          if (els.invoiceCopyInput) {
+            els.invoiceCopyInput.focus();
+            els.invoiceCopyInput.select();
+          }
+          toast('Unable to copy invoice');
         }
 
         function startInvoiceWatcher() {
@@ -1312,7 +1399,6 @@
         }
 
         function filterProducts() {
-          const term = state.search.trim().toLowerCase();
           const activeTag = normalizeTag(state.selectedTag);
           const allowed = normalizeTag(state.shop.allowed_tags || '')
             .split(',')
@@ -1328,11 +1414,8 @@
             const matchesAllowed = !allowed.length || itemTags.some(t => allowed.includes(t));
             const itemOmit = omitTagsLowerFor(item);
             const hasOmit = omitList.length && itemOmit.some(t => omitList.includes(t));
-            const haystack = `${item.name || ''} ${item.description || ''} ${item.tags || ''}`.toLowerCase();
-            const matchesSearch = !term || haystack.includes(term);
-            return matchesTag && matchesAllowed && !hasOmit && matchesSearch;
+            return matchesTag && matchesAllowed && !hasOmit;
           });
-          state.page = 1;
           renderProducts();
           updateTagActive();
         }
@@ -1352,9 +1435,7 @@
             return;
           }
           els.empty.style.display = 'none';
-          const start = (state.page - 1) * state.pageSize;
-          const visible = state.filtered.slice(start, start + state.pageSize);
-          visible.forEach(item => {
+          state.filtered.forEach(item => {
             const card = document.createElement('article');
             card.className = 'product-card';
             const imgUrl = parseImage(item);
@@ -1676,20 +1757,25 @@
         }
 
         function totalPages() {
-          return Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+          const total = Math.max(0, Number(state.totalItems) || 0);
+          const pages = Math.ceil(total / state.pageSize);
+          return Math.max(1, pages || 0);
         }
 
         function setPage(page) {
           const max = totalPages();
-          state.page = Math.min(Math.max(page, 1), max);
-          renderProducts();
+          const next = Math.min(Math.max(page, 1), max);
+          if (next === state.page) return;
+          state.page = next;
+          fetchProducts();
         }
 
         function renderPagination() {
           if (!els.pagination) return;
           els.pagination.innerHTML = '';
           const max = totalPages();
-          if (max <= 1) {
+          const total = Math.max(0, Number(state.totalItems) || 0);
+          if (max <= 1 || total <= state.pageSize) {
             els.pagination.style.display = 'none';
             return;
           }
@@ -1721,7 +1807,8 @@
         function attachEvents() {
           els.search.addEventListener('input', e => {
             state.search = e.target.value;
-            filterProducts();
+            state.page = 1;
+            fetchProducts();
           });
           if (els.tagList) {
             els.tagList.addEventListener('click', e => {
@@ -1729,7 +1816,8 @@
               if (!btn) return;
               const tagValue = normalizeTag(btn.dataset.tag);
               state.selectedTag = tagValue;
-              filterProducts();
+              state.page = 1;
+              fetchProducts();
             });
           }
           els.openCart.onclick = showCart;
@@ -1782,13 +1870,7 @@
             els.payButton.addEventListener('click', submitCheckout);
           }
           if (els.invoiceQr) {
-            els.invoiceQr.addEventListener('click', () => {
-              if (!state.invoice || !state.invoice.request) return;
-              navigator.clipboard
-                .writeText(state.invoice.request)
-                .then(() => toast('Invoice copied to clipboard'))
-                .catch(() => toast('Unable to copy invoice'));
-            });
+            els.invoiceQr.addEventListener('click', copyInvoice);
             els.invoiceQr.addEventListener('mouseenter', () => {
               setPaymentStatus('Click QR to copy invoice', false);
             });
@@ -1799,6 +1881,12 @@
                   : 'Select a method to continue.',
                 false
               );
+            });
+          }
+          if (els.invoiceCopyBtn) {
+            els.invoiceCopyBtn.addEventListener('click', e => {
+              e.preventDefault();
+              copyInvoice();
             });
           }
           if (els.detailAddress) {
@@ -1834,14 +1922,8 @@
           }
         }
 
-        async function fetchProducts() {
-          if (!state.inventoryId) {
-            state.error = 'No inventory linked to this shop yet.';
-            renderErrors();
-            return;
-          }
-          state.loading = true;
-          renderProducts();
+        async function fetchTags() {
+          if (!state.inventoryId) return;
           try {
             const params = new URLSearchParams({
               limit: 200,
@@ -1853,26 +1935,69 @@
             const response = await fetch(
               `/inventory/api/v1/items/${state.inventoryId}/paginated?${params.toString()}`
             );
-            if (!response.ok) throw new Error('Unable to load products.');
+            if (!response.ok) return;
             const payload = await response.json();
-            state.products = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
-            state.tags = ['__all'];
+            const items = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
             const allowedTags = parseTags(state.shop.allowed_tags);
             const omitTags = parseTags(state.shop.omit_tags);
-            state.products.forEach(item => {
-              const itemTags = tagsFor(item);
+            const tags = ['__all'];
+            items.forEach(item => {
               const lower = tagsLowerFor(item);
               lower.forEach(tag => {
                 const allowedOk = !allowedTags.length || allowedTags.includes(tag);
                 const notOmitted = !omitTags.length || !omitTags.includes(tag);
-                if (tag && allowedOk && notOmitted && !state.tags.includes(tag)) {
-                  state.tags.push(tag);
+                if (tag && allowedOk && notOmitted && !tags.includes(tag)) {
+                  tags.push(tag);
                 }
               });
             });
+            state.tags = tags;
             renderTags();
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        function openPendingItem() {
+          if (!state.pendingItemId) return;
+          const match = state.products.find(p => p.id === state.pendingItemId);
+          if (match) {
+            openProductModal(match);
+            state.pendingItemId = '';
+          }
+        }
+
+        async function fetchProducts() {
+          if (!state.inventoryId) {
+            state.error = 'No inventory linked to this shop yet.';
+            renderErrors();
+            return;
+          }
+          state.error = '';
+          renderErrors();
+          state.loading = true;
+          renderProducts();
+          try {
+            const params = new URLSearchParams({
+              limit: state.pageSize,
+              offset: Math.max(0, (state.page - 1) * state.pageSize),
+              sortby: 'created_at',
+              direction: 'desc',
+              is_active: true
+            });
+            const activeTag = normalizeTag(state.selectedTag);
+            if (activeTag && activeTag !== '__all') params.set('tags', activeTag);
+            const searchTerm = state.search.trim();
+            if (searchTerm) params.set('search', searchTerm);
+            const response = await fetch(
+              `/inventory/api/v1/items/${state.inventoryId}/paginated?${params.toString()}`
+            );
+            if (!response.ok) throw new Error('Unable to load products.');
+            const payload = await response.json();
+            state.products = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
+            state.totalItems = Number(payload.total || 0);
             filterProducts();
-            openFromQuery();
+            openPendingItem();
           } catch (err) {
             console.error(err);
             state.error = 'Could not load products from inventory.';
@@ -1880,6 +2005,7 @@
           } finally {
             state.loading = false;
             renderProducts();
+            if (!state.error) renderErrors();
           }
         }
 
@@ -1898,22 +2024,13 @@
           const itemId = params.get('item');
           const tag = params.get('tag');
           const search = params.get('q');
-          if (tag) {
-            state.selectedTag = normalizeTag(tag);
-            renderTags();
-            filterProducts();
-          }
+          if (tag) state.selectedTag = normalizeTag(tag);
           if (search) {
             state.search = search;
-            els.search.value = search;
-            filterProducts();
+            if (els.search) els.search.value = search;
           }
-          if (itemId) {
-            const match = state.products.find(p => p.id === itemId);
-            if (match) {
-              openProductModal(match);
-            }
-          }
+          if (itemId) state.pendingItemId = itemId;
+          if (tag || search || itemId) state.page = 1;
         }
 
         function init() {
@@ -1921,9 +2038,12 @@
           if (state.shop.allow_fiat === undefined) state.shop.allow_fiat = true;
           setTheme();
           attachEvents();
+          renderTags();
           updateRequiredLabels();
           updateCheckoutUI();
           renderCart();
+          openFromQuery();
+          fetchTags();
           fetchProducts();
         }
 
