@@ -172,7 +172,7 @@ async def _deduct_inventory_stock(shop: Shop, items: list | None) -> None:
             await client.patch(
                 url=f"http://{settings.host}:{settings.port}/inventory/api/v1/items/{shop.inventory_id}/quantities",
                 headers={"Authorization": f"Bearer {access}"},
-                params={"ids": ids, "quantities": quantities},
+                params={"source": "webshop", "ids": ids, "quantities": quantities},
             )
     except Exception as exc:  # pragma: no cover
         logger.error(f"Error notifying inventory extension: {exc}")
