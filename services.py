@@ -106,12 +106,13 @@ async def payment_request_for_client_data(
             extra={"tag": "webshop", "client_data_id": client_data.id},
         ),
     )
+    logger.debug(invoice)
     fiat_link = getattr(invoice, "extra", {}).get("fiat_payment_request")
 
     client_data_resp = ClientDataPaymentRequest(
         client_data_id=client_data.id,
         payment_request=getattr(invoice, "bolt11", None),
-        payment_hash=getattr(invoice, "checking_id", None),
+        payment_hash=getattr(invoice, "payment_hash", None),
         fiat_payment_request=fiat_link or getattr(invoice, "extra", {}).get("fiat_payment_request"),
         fiat_provider=getattr(invoice, "fiat_provider", None) or chosen_fiat_provider,
         is_fiat=bool(getattr(invoice, "fiat_provider", None) or chosen_fiat_provider),

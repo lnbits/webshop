@@ -1724,6 +1724,7 @@
                 hash: data.payment_hash,
                 paid: false
               }
+              startInvoiceWatcher();
               if (isFiat) {
                 const checkoutUrl = fiatLink;
                 if (checkoutUrl) {
@@ -1734,7 +1735,6 @@
                 }
               } else {
                 renderInvoice();
-                startInvoiceWatcher();
               }
             }
             setPaymentStatus(
