@@ -166,7 +166,7 @@ async def _deduct_inventory_stock(shop: Shop, items: list | None) -> None:
 
     if not ids:
         return
-
+    # Needed to accomodate admin users, as using user ID is not possible
     access = create_access_token({"sub": "", "usr": shop.user_id}, token_expire_minutes=1)
     try:
         async with httpx.AsyncClient() as client:
