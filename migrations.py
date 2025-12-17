@@ -1,7 +1,7 @@
 from lnbits.db import Database
 
 
-async def m002_shop(db: Database):
+async def m001_shop(db: Database):
     """
     Initial shop table.
     """
@@ -28,8 +28,6 @@ async def m002_shop(db: Database):
         """
     )
 
-
-async def m006_create_client_data(db: Database):
     """
     Orders table (client data).
     """
