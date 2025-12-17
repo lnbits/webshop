@@ -1,7 +1,7 @@
 from lnbits.db import Database
 
 
-async def m002_shop(db: Database):
+async def m001_shop(db: Database):
     """
     Initial shop table.
     """
@@ -20,16 +20,14 @@ async def m002_shop(db: Database):
             allowed_tags TEXT,
             omit_tags TEXT,
             required_customer_info TEXT,
-            allow_bitcoin BOOLEAN NOT NULL DEFAULT 1,
-            allow_fiat BOOLEAN NOT NULL DEFAULT 1,
+            allow_bitcoin BOOLEAN NOT NULL DEFAULT true,
+            allow_fiat BOOLEAN NOT NULL DEFAULT true,
             created_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now},
             updated_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now}
         );
         """
     )
 
-
-async def m006_create_client_data(db: Database):
     """
     Orders table (client data).
     """
@@ -43,8 +41,8 @@ async def m006_create_client_data(db: Database):
             address TEXT,
             email TEXT,
             number TEXT,
-            shipped BOOLEAN NOT NULL DEFAULT 0,
-            paid BOOLEAN NOT NULL DEFAULT 0,
+            shipped BOOLEAN NOT NULL DEFAULT false,
+            paid BOOLEAN NOT NULL DEFAULT false,
             items TEXT,
             created_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now},
             updated_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now}
