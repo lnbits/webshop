@@ -41,6 +41,8 @@ async def shop_public_page(req: Request, shop_id: str):
 
     public_page_name = getattr(shop, "name", "")
     shop_data = shop.dict()
+    # Remove wallet identifier before sending shop data to the public page
+    shop_data.pop("wallet", None)
     if shop_data.get("created_at"):
         shop_data["created_at"] = shop_data["created_at"].isoformat()
     if shop_data.get("updated_at"):
