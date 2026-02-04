@@ -1556,7 +1556,8 @@
               name: item.name,
               price: item.price,
               quantity: limit === Infinity ? 1 : Math.min(1, limit),
-              quantity_in_stock: item.quantity_in_stock
+              quantity_in_stock: item.quantity_in_stock,
+              weight_grams: item.weight_grams
             });
           }
           renderCart();
@@ -1700,7 +1701,8 @@
                 id: entry.id,
                 name: entry.name,
                 quantity: entry.quantity,
-                price: entry.price
+                price: entry.price,
+                weight_grams: entry.weight_grams
               })),
               payment_method: state.checkoutMethod,
               fiat_provider:

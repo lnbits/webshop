@@ -54,6 +54,7 @@ def _normalize_items(items: list | str | None) -> list[dict]:
                 "name": data.get("name"),
                 "quantity": data.get("quantity"),
                 "price": data.get("price"),
+                "weight_grams": data.get("weight_grams"),
             }
         )
     return normalized

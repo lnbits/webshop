@@ -90,6 +90,7 @@ class CreateClientDataItem(BaseModel):
     name: str
     quantity: int = Field(ge=1)
     price: float | None = None
+    weight_grams: int | None = None
 
 
 class CreateClientData(BaseModel):
@@ -174,6 +175,7 @@ class OrdersCreatePayload(BaseModel):
     email: EmailStr | None = None
     phone: str | None = None
     npub: str | None = None
+    weight: str | None = None
     paid: bool = False
     shipped: bool = False
 
