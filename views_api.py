@@ -17,7 +17,6 @@ from .crud import (
     create_shop,
     delete_shop,
     get_shop,
-    get_shop_ids_by_user,
     get_shop_paginated,
     update_shop,
 )

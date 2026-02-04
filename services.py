@@ -38,6 +38,7 @@ def _validate_required_fields(required: list[str], data: PublicClientDataRequest
     if missing:
         raise ValueError(f"Missing required customer info: {', '.join(missing)}.")
 
+
 def _normalize_items(items: list | str | None) -> list[dict]:
     if not items:
         return []
@@ -242,8 +243,8 @@ async def _create_orders_order(
                 json=payload,
             )
             resp.raise_for_status()
-            data = resp.json()
-            return data.get("id")
+            resp_data = resp.json()
+            return resp_data.get("id")
         except Exception as exc:
             logger.warning(f"webshop: failed to push order to orders: {exc}")
             return ""

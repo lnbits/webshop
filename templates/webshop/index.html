@@ -4,16 +4,16 @@
 <script src="{{ static_url_for('webshop/static', path='js/index.js') }}"></script>
 
 {% endblock %} {% block page %}
-  <div class="row q-col-gutter-md">
-    <div class="col-12 col-md-8 col-lg-7 q-gutter-y-md">
-      <q-banner
-        v-if="!g.extensions.includes('orders')"
-        class="bg-warning text-black q-mb-md"
-        dense
-        rounded
-      >
-        Orders extension must be installed and enabled.
-      </q-banner>
+<div class="row q-col-gutter-md">
+  <div class="col-12 col-md-8 col-lg-7 q-gutter-y-md">
+    <q-banner
+      v-if="!g.extensions.includes('orders')"
+      class="bg-warning text-black q-mb-md"
+      dense
+      rounded
+    >
+      Orders extension must be installed and enabled.
+    </q-banner>
     <div class="q-mt-lg">
       <span class="text-h5">Shop</span>
     </div>
@@ -307,6 +307,5 @@
       </div>
     </q-card>
   </q-dialog>
-
 </div>
 {% endblock %}

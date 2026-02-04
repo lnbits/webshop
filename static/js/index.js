@@ -190,7 +190,7 @@ window.app = Vue.createApp({
         }
         this.getShop()
       }
-    },
+    }
     // client data is handled by the Orders extension
   },
 
