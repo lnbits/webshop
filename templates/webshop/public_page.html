@@ -1708,8 +1708,9 @@
                   ? state.shop.fiat_provider || null
                   : null
             };
+            const baseUrl = window.location.origin
             const response = await fetch(
-              `/webshop/api/v1/client_data/public/${SHOP_ID}`,
+              `/webshop/api/v1/client_data/public/${SHOP_ID}?base_url=${encodeURIComponent(baseUrl)}`,
               {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },

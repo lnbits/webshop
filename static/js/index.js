@@ -191,15 +191,7 @@ window.app = Vue.createApp({
         this.getShop()
       }
     },
-    'clientDataTable.search': {
-      handler() {
-        const props = {}
-        if (this.clientDataTable.search) {
-          props['search'] = this.clientDataTable.search
-        }
-        this.getClientData()
-      }
-    }
+    // client data is handled by the Orders extension
   },
 
   methods: {
@@ -484,6 +476,5 @@ window.app = Vue.createApp({
   async created() {
     await this.fetchInventoryId()
     this.getShop()
-    this.getClientData()
   }
 })

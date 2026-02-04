@@ -28,6 +28,13 @@ async def m001_shop(db: Database):
         """
     )
 
+
+async def m002_drop_client_data(db: Database):
+    """
+    Drop client data table; orders are handled by the Orders extension.
+    """
+    await db.execute("DROP TABLE webshop.client_data")
+
     """
     Orders table (client data).
     """

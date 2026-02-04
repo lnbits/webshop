@@ -4,8 +4,16 @@
 <script src="{{ static_url_for('webshop/static', path='js/index.js') }}"></script>
 
 {% endblock %} {% block page %}
-<div class="row q-col-gutter-md">
-  <div class="col-12 col-md-8 col-lg-7 q-gutter-y-md">
+  <div class="row q-col-gutter-md">
+    <div class="col-12 col-md-8 col-lg-7 q-gutter-y-md">
+      <q-banner
+        v-if="!g.extensions.includes('orders')"
+        class="bg-warning text-black q-mb-md"
+        dense
+        rounded
+      >
+        Orders extension must be installed and enabled.
+      </q-banner>
     <div class="q-mt-lg">
       <span class="text-h5">Shop</span>
     </div>
@@ -130,105 +138,12 @@
     <div class="q-mt-lg">
       <span class="text-h5">Orders</span>
     </div>
-    <q-card id="clientDataCard" class="q-mt-xs">
+    <q-card class="q-mt-xs">
       <q-card-section>
-        <div class="row items-center no-wrap q-mb-md">
-          <div class="col">
-            <q-input
-              :label="$t('search')"
-              dense
-              class="q-pr-xl"
-              v-model="clientDataTable.search"
-            >
-              <template v-slot:before>
-                <q-icon name="search"> </q-icon>
-              </template>
-              <template v-slot:append>
-                <q-icon
-                  v-if="clientDataTable.search !== ''"
-                  name="close"
-                  @click="clientDataTable.search = ''"
-                  class="cursor-pointer"
-                >
-                </q-icon>
-              </template>
-            </q-input>
-          </div>
-          <div class="col-auto">
-            <q-btn
-              flat
-              color="grey"
-              icon="file_download"
-              @click="exportClientDataCSV"
-              >CSV</q-btn
-            >
-          </div>
-        </div>
-        <q-table
-          dense
-          flat
-          :rows="clientDataList"
-          row-key="id"
-          :columns="clientDataTable.columns"
-          v-model:pagination="clientDataTable.pagination"
-          :loading="clientDataTable.loading"
-          @request="getClientData"
-          @row-click="showOrderRow"
-        >
-          <template v-slot:header="props">
-            <q-tr :props="props">
-              <q-th auto-width></q-th>
-              <q-th v-for="col in props.cols" :key="col.name" :props="props">
-                ${ col.label }
-              </q-th>
-            </q-tr>
-          </template>
-
-          <template v-slot:body="props">
-            <q-tr
-              :props="props"
-              class="cursor-pointer"
-              @click="showOrderDetails(props.row)"
-            >
-              <q-td auto-width>
-                <q-btn
-                  dense
-                  flat
-                  size="xs"
-                  :color="props.row.shipped ? 'green' : 'grey'"
-                  :icon="props.row.shipped ? 'local_shipping' : 'local_shipping'"
-                  @click.stop="toggleShipped(props.row)"
-                  class="q-mr-sm"
-                >
-                  <q-tooltip>
-                    <span
-                      v-text="props.row.shipped ? 'Mark unshipped' : 'Mark shipped'"
-                    ></span>
-                  </q-tooltip>
-                </q-btn>
-              </q-td>
-
-              <q-td v-for="col in props.cols" :key="col.name" :props="props">
-                <div v-if="col.field == 'updated_at'">
-                  <span v-text="dateFromNow(col.value)"> </span>
-                </div>
-                <div v-else-if="col.field == 'paid'">
-                  <q-badge :color="col.value ? 'green' : 'grey'" align="middle"
-                    >${ col.value ? 'Yes' : 'No' }</q-badge
-                  >
-                </div>
-                <div v-else-if="col.field == 'shipped'">
-                  <q-badge
-                    :color="col.value ? 'green' : 'orange'"
-                    align="middle"
-                    >${ col.value ? 'Yes' : 'No' }</q-badge
-                  >
-                </div>
-                <div v-else>${ col.value }</div>
-              </q-td>
-            </q-tr>
-          </template>
-        </q-table>
+        <p class="q-mb-none">
+          Orders are managed in the Orders extension. Enable it to view and
+          process webshop orders.
+        </p>
       </q-card-section>
     </q-card>
   </div>
@@ -393,107 +308,5 @@
     </q-card>
   </q-dialog>
 
-  <q-dialog v-model="clientDataDialog.show" position="top">
-    <q-card
-      v-if="clientDataDialog.show"
-      class="q-pa-lg q-pt-md lnbits__dialog-card q-col-gutter-md"
-      style="min-width: 480px"
-    >
-      <div class="row items-center justify-between">
-        <span class="text-h6">Order Details</span>
-        <div class="row items-center q-gutter-sm">
-          <q-badge :color="clientDataDialog.data.paid ? 'green' : 'grey'">
-            ${ clientDataDialog.data.paid ? 'Paid' : 'Unpaid' }
-          </q-badge>
-          <q-badge :color="clientDataDialog.data.shipped ? 'green' : 'orange'">
-            ${ clientDataDialog.data.shipped ? 'Shipped' : 'Not shipped' }
-          </q-badge>
-        </div>
-      </div>
-      <div class="text-caption text-grey-7 q-mb-sm">
-        Updated ${ formatFromNow(clientDataDialog.data.updated_at) }
-      </div>
-
-      <q-list bordered separator class="rounded-borders">
-        <q-item>
-          <q-item-section>
-            <q-item-label caption>Product</q-item-label>
-            <q-item-label class="text-weight-bold"
-              >${ clientDataDialog.data.product || '-' }</q-item-label
-            >
-          </q-item-section>
-          <q-item-section side>
-            <q-item-label caption>Quantity</q-item-label>
-            <q-item-label class="text-weight-bold"
-              >${ clientDataDialog.data.quantity || 0 }</q-item-label
-            >
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section>
-            <q-item-label caption>Address</q-item-label>
-            <q-item-label
-              >${ clientDataDialog.data.address || '—' }</q-item-label
-            >
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section>
-            <q-item-label caption>Email</q-item-label>
-            <q-item-label>${ clientDataDialog.data.email || '—' }</q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-item-label caption>Phone</q-item-label>
-            <q-item-label
-              >${ clientDataDialog.data.number || '—' }</q-item-label
-            >
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section>
-            <q-item-label caption>Order ID</q-item-label>
-            <q-item-label class="monospace"
-              >${ clientDataDialog.data.id || '—' }</q-item-label
-            >
-          </q-item-section>
-        </q-item>
-      </q-list>
-
-      <div class="q-mt-md">
-        <div class="text-subtitle2 q-mb-sm">Items</div>
-        <div v-if="clientDataDialog.itemsLoading" class="text-grey">
-          Loading...
-        </div>
-        <div v-else-if="!clientDataDialog.items.length" class="text-grey-7">
-          No line items.
-        </div>
-        <q-list v-else dense bordered class="rounded-borders">
-          <q-item v-for="item in clientDataDialog.items" :key="item.id">
-            <q-item-section>
-              <q-item-label class="text-weight-bold"
-                >${ item.name }</q-item-label
-              >
-              <q-item-label
-                caption
-                v-if="item.price !== null && item.price !== undefined"
-              >
-                Price: ${ item.price }
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-item-label caption>Qty</q-item-label>
-              <q-item-label class="text-weight-bold"
-                >${ item.quantity }</q-item-label
-              >
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </div>
-
-      <div class="row items-center q-mt-md">
-        <q-btn flat color="grey" class="q-ml-auto" v-close-popup>Close</q-btn>
-      </div>
-    </q-card>
-  </q-dialog>
 </div>
 {% endblock %}

@@ -2,7 +2,7 @@ from http import HTTPStatus
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.exceptions import HTTPException
 from lnbits.core.models import SimpleStatus, User
 from lnbits.db import Filters, Page
@@ -14,23 +14,15 @@ from lnbits.helpers import create_access_token, generate_filter_params_openapi
 from lnbits.settings import settings
 
 from .crud import (
-    create_client_data,
     create_shop,
-    delete_client_data,
     delete_shop,
-    get_client_data_by_id,
-    get_client_data_paginated,
     get_shop,
     get_shop_ids_by_user,
     get_shop_paginated,
-    update_client_data,
     update_shop,
 )
 from .models import (
-    ClientData,
-    ClientDataFilters,
     ClientDataPaymentRequest,  #
-    CreateClientData,
     CreateShop,
     PublicClientDataRequest,
     Shop,
@@ -41,7 +33,6 @@ from .services import (
 )
 
 shop_filters = parse_filters(ShopFilters)
-client_data_filters = parse_filters(ClientDataFilters)
 webshop_api_router = APIRouter()
 
 
@@ -206,28 +197,7 @@ async def api_delete_shop(
     return SimpleStatus(success=True, message="Shop Deleted")
 
 
-############################# Client Data #############################
-@webshop_api_router.post(
-    "/api/v1/client_data/{shop_id}",
-    name="Create Client Data",
-    summary="Create new client data for the specified shop.",
-    response_description="The created client data.",
-    response_model=ClientData,
-    status_code=HTTPStatus.CREATED,
-)
-async def api_create_client_data(
-    shop_id: str,
-    data: CreateClientData,
-    user: User = Depends(check_user_exists),
-) -> ClientData:
-    shop = await get_shop(user.id, shop_id)
-    if not shop:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
-
-    client_data = await create_client_data(shop_id, data)
-    return client_data
-
-
+############################# Client Data (Orders) #############################
 @webshop_api_router.put(
     "/api/v1/client_data/public/{shop_id}",
     name="Submit new Client Data",
@@ -238,105 +208,17 @@ async def api_create_client_data(
 async def api_submit_public_client_data(
     shop_id: str,
     data: PublicClientDataRequest,
+    request: Request,
+    base_url: str | None = None,
 ) -> ClientDataPaymentRequest | None:
 
     try:
-        return await payment_request_for_client_data(shop_id, data, data.payment_method, data.fiat_provider)
+        return await payment_request_for_client_data(
+            shop_id,
+            data,
+            data.payment_method,
+            data.fiat_provider,
+            base_url=base_url or str(request.base_url),
+        )
     except ValueError as exc:
         raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(exc)) from exc
-
-
-@webshop_api_router.put(
-    "/api/v1/client_data/{client_data_id}",
-    name="Update Client Data",
-    summary="Update the client_data with this id.",
-    response_description="The updated client data.",
-    response_model=ClientData,
-)
-async def api_update_client_data(
-    client_data_id: str,
-    data: CreateClientData,
-    user: User = Depends(check_user_exists),
-) -> ClientData:
-    client_data = await get_client_data_by_id(client_data_id)
-    if not client_data:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "Client Data not found.")
-
-    shop = await get_shop(user.id, client_data.shop_id)
-    if not shop:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
-
-    client_data = await update_client_data(ClientData(**{**client_data.dict(), **data.dict()}))
-    return client_data
-
-
-@webshop_api_router.get(
-    "/api/v1/client_data/paginated",
-    name="Client Data List",
-    summary="get paginated list of client_data",
-    response_description="list of client_data",
-    openapi_extra=generate_filter_params_openapi(ClientDataFilters),
-    response_model=Page[ClientData],
-)
-async def api_get_client_data_paginated(
-    user: User = Depends(check_user_exists),
-    shop_id: str | None = None,
-    filters: Filters = Depends(client_data_filters),
-) -> Page[ClientData]:
-
-    shop_ids = await get_shop_ids_by_user(user.id)
-
-    if shop_id:
-        if shop_id not in shop_ids:
-            raise HTTPException(HTTPStatus.FORBIDDEN, "Not your shop.")
-        shop_ids = [shop_id]
-
-    return await get_client_data_paginated(
-        shop_ids=shop_ids,
-        filters=filters,
-    )
-
-
-@webshop_api_router.get(
-    "/api/v1/client_data/{client_data_id}",
-    name="Get Client Data",
-    summary="Get the client data with this id.",
-    response_description="An client data or 404 if not found",
-    response_model=ClientData,
-)
-async def api_get_client_data(
-    client_data_id: str,
-    user: User = Depends(check_user_exists),
-) -> ClientData:
-
-    client_data = await get_client_data_by_id(client_data_id)
-    if not client_data:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "ClientData not found.")
-    shop = await get_shop(user.id, client_data.shop_id)
-    if not shop:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "Shop deleted for this Client Data.")
-
-    return client_data
-
-
-@webshop_api_router.delete(
-    "/api/v1/client_data/{client_data_id}",
-    name="Delete Client Data",
-    summary="Delete the client_data",
-    response_description="The status of the deletion.",
-    response_model=SimpleStatus,
-)
-async def api_delete_client_data(
-    client_data_id: str,
-    user: User = Depends(check_user_exists),
-) -> SimpleStatus:
-
-    client_data = await get_client_data_by_id(client_data_id)
-    if not client_data:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "ClientData not found.")
-    shop = await get_shop(user.id, client_data.shop_id)
-    if not shop:
-        raise HTTPException(HTTPStatus.NOT_FOUND, "Shop deleted for this Client Data.")
-
-    await delete_client_data(shop.id, client_data_id)
-    return SimpleStatus(success=True, message="Client Data Deleted")
