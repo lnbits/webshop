@@ -1,5 +1,11 @@
-## <extension_id>>
+Create an online shop with customizable design and Bitcoin or fiat payments.
 
-### <<short_description>>
+Its functions include:
 
-<<description>>
+- Building shops with custom colors and branding
+- Integrating with the Inventory extension for products
+- Accepting both Bitcoin and fiat payments
+- Managing orders with customer info and shipping status
+- Filtering products by tags
+
+A complete e-commerce solution for merchants who want to launch a customizable online store with Bitcoin and fiat payment options inside lnbits.
