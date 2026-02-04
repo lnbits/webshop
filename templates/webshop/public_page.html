@@ -10,2051 +10,444 @@
       href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ static_url_for('static', 'vendor/quasar.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ static_url_for('static', 'css/base.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ static_url_for('webshop/static', path='css/public_page.css') }}"
+    />
     {% set primary_color = shop.get('primary_color', '#1c56ac') %} {% set
     secondary_color = shop.get('secondary_color', '#0bb6d5') %} {% set
     background_color = shop.get('background_color', '#f6f7f9') %}
     <style>
-        :root {
-          --primary: {{ primary_color }};
-          --secondary: {{ secondary_color }};
-          --bg: {{ background_color }};
-          --panel: #ffffff;
-          --ink: #0f172a;
-          --muted: #6b7280;
-          --border: #e5e7eb;
-          --shadow-strong: none;
-          --shadow-soft: none;
-          --radius-lg: 8px;
-          --radius-md: 6px;
-          --radius-sm: 4px;
-          color-scheme: light;
-        }
-        * {
-          box-sizing: border-box;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: "Manrope", system-ui, -apple-system, sans-serif;
-          background: var(--bg);
-          color: var(--ink);
-          min-height: 100vh;
-          -webkit-font-smoothing: antialiased;
-        }
-        a {
-          color: inherit;
-          text-decoration: none;
-        }
-        .page {
-          width: 100%;
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 5px 5px 5px;
-        }
-        .filters {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .filters-row {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          flex-wrap: wrap;
-        }
-        button {
-          border: none;
-          cursor: pointer;
-          font-family: inherit;
-          font-weight: 700;
-          transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
-        }
-        .btn-primary {
-          background: var(--primary);
-          color: #fff;
-          padding: 10px 14px;
-          border-radius: var(--radius-sm);
-          box-shadow: none;
-        }
-        .btn-ghost {
-          background: #f8fafc;
-          border: 1px solid var(--border);
-          color: var(--ink);
-          padding: 10px 14px;
-          border-radius: var(--radius-sm);
-          box-shadow: none;
-        }
-        .btn-ghost:disabled,
-        .btn-primary:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .btn-chip {
-          padding: 10px 14px;
-          border-radius: var(--radius-sm);
-          background: #f4f5f7;
-          border: 1px solid var(--border);
-          color: var(--ink);
-          font-weight: 600;
-          font-size: 14px;
-          box-shadow: none;
-        }
-        .btn-chip.is-active {
-          background: #e8edf2;
-          border-color: var(--primary);
-          color: #0b1222;
-          box-shadow: none;
-        }
-        .btn-icon {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .section {
-          margin-top: 5px;
-        }
-        .tag-scroll {
-          display: flex;
-          gap: 10px;
-          overflow-x: auto;
-          padding-bottom: 4px;
-          scrollbar-width: thin;
-        }
-        .search-box {
-          flex: 1;
-          min-width: 240px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: #fff;
-          border: 1px solid var(--border);
-          padding: 10px 12px;
-          border-radius: var(--radius-sm);
-          box-shadow: none;
-        }
-        .search-box input {
-          border: none;
-          outline: none;
-          width: 100%;
-          font-size: 15px;
-          background: transparent;
-          color: var(--ink);
-        }
-        .grid {
-          display: grid;
-          gap: 14px;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          margin-top: 16px;
-        }
-        .pagination {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          margin: 20px 0 8px;
-        }
-        .pager-btn {
-          min-width: 34px;
-          height: 34px;
-          padding: 0 10px;
-          border-radius: 50%;
-          border: 1px solid var(--border);
-          background: #fff;
-          color: var(--ink);
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-        }
-        .pager-btn.is-active {
-          background: var(--primary);
-          color: #fff;
-          border-color: var(--primary);
-        }
-        .pager-btn:disabled {
-          opacity: 0.4;
-          cursor: default;
-        }
-        .product-card {
-          background: #fff;
-          border-radius: var(--radius-sm);
-          border: 1px solid #e4e7eb;
-          box-shadow: none;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          transition: none;
-        }
-        .product-thumb {
-          position: relative;
-          padding-top: 68%;
-          background: #f3f4f6;
-          background-size: cover;
-          background-position: center;
-        }
-        .tag-label {
-          position: absolute;
-          top: 10px;
-          left: 10px;
-          background: rgba(255, 255, 255, 0.9);
-          color: #0f172a;
-          padding: 7px 10px;
-          border-radius: var(--radius-sm);
-          font-size: 12px;
-          font-weight: 700;
-          border: 1px solid rgba(15, 23, 42, 0.08);
-          box-shadow: none;
-        }
-        .product-body {
-          padding: 12px 12px 6px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          flex: 1;
-        }
-        .title {
-          font-size: 16px;
-          font-weight: 700;
-          line-height: 1.3;
-          color: var(--ink);
-        }
-        .description {
-          font-size: 14px;
-          color: var(--muted);
-          line-height: 1.45;
-          max-height: 3.1em;
-          overflow: hidden;
-        }
-        .meta {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          font-weight: 700;
-          color: var(--ink);
-        }
-        .price {
-          font-size: 18px;
-        }
-        .stock {
-          font-size: 12px;
-          color: var(--muted);
-          font-weight: 600;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .card-actions {
-          display: flex;
-          gap: 8px;
-          padding: 0 14px 14px;
-          margin-top: auto;
-        }
-        .card-actions .btn-primary {
-          flex: 1;
-          justify-content: center;
-        }
-        .btn-ghost.is-secondary {
-          color: var(--primary);
-          border-color: color-mix(in srgb, var(--primary) 40%, #dfe5f2 60%);
-          background: color-mix(in srgb, var(--primary) 10%, #fff 90%);
-        }
-        .badge {
-          background: color-mix(in srgb, var(--primary) 14%, #fff 86%);
-          color: var(--ink);
-          padding: 6px 8px;
-          border-radius: var(--radius-sm);
-          font-size: 12px;
-          font-weight: 700;
-          border: 1px solid color-mix(in srgb, var(--primary) 32%, #e3e7ef 68%);
-        }
-        .error {
-          margin-top: 14px;
-          padding: 14px 16px;
-          background: #fff5f5;
-          color: #7f1d1d;
-          border: 1px solid #fca5a5;
-          border-radius: var(--radius-md);
-          box-shadow: none;
-        }
-        .empty {
-          text-align: center;
-          padding: 60px 20px;
-          background: #fff;
-          border-radius: var(--radius-lg);
-          border: 1px dashed var(--border);
-          color: var(--muted);
-          box-shadow: none;
-          margin-top: 12px;
-        }
-        .loader {
-          width: 54px;
-          height: 54px;
-          border-radius: 50%;
-          border: 6px solid #e5e7eb;
-          border-top-color: var(--primary);
-          animation: spin 1s linear infinite;
-          margin: 40px auto 20px;
-        }
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      .modal {
-        position: fixed;
-        inset: 0;
-        background: transparent;
-        display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          padding: 32px 16px;
-          z-index: 50;
-          opacity: 0;
-          pointer-events: none;
-          overflow-y: auto;
-        transition: opacity 160ms ease;
+      @font-face {
+        font-family: 'Material Icons';
+        font-style: normal;
+        font-weight: 400;
+        src: url("{{ static_url_for('static', 'fonts/material-icons-v50.woff2') }}")
+          format('woff2');
       }
-      .modal.is-visible {
-        opacity: 1;
-        pointer-events: auto;
+      :root {
+        --q-primary: {{ primary_color }};
+        --q-secondary: {{ secondary_color }};
+        --shop-bg: {{ background_color }};
       }
-        .modal-card {
-          background: #fff;
-          border-radius: var(--radius-lg);
-          width: min(960px, 100%);
-          max-height: calc(100vh - 32px);
-          overflow: auto;
-          box-shadow: none;
-          position: relative;
-          display: grid;
-          grid-template-columns: 1.1fr 1fr;
-        }
-        .modal-close {
-          position: absolute;
-          top: 12px;
-          right: 12px;
-          background: rgba(15, 23, 42, 0.05);
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: 16px;
-          color: var(--ink);
-        }
-        .modal-media {
-          background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, #f8fafc 88%), color-mix(in srgb, var(--secondary) 14%, #ffffff 86%));
-          display: grid;
-          place-items: center;
-          position: relative;
-          padding: 14px;
-        }
-        .modal-media img {
-          width: 100%;
-          max-height: 420px;
-          object-fit: contain;
-          border-radius: 16px;
-          box-shadow: none;
-          background: #fff;
-        }
-        .slide-nav {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          border: 1px solid var(--border);
-          background: rgba(255, 255, 255, 0.9);
-          color: var(--ink);
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: 18px;
-          cursor: pointer;
-          transition: background 120ms ease;
-        }
-        .slide-nav:hover {
-          background: #fff;
-        }
-        .slide-nav.prev {
-          left: 12px;
-        }
-        .slide-nav.next {
-          right: 12px;
-        }
-        .slide-nav:disabled {
-          opacity: 0.5;
-          cursor: default;
-        }
-        .slide-indicator {
-          position: absolute;
-          bottom: 10px;
-          right: 12px;
-          background: rgba(0, 0, 0, 0.6);
-          color: #fff;
-          padding: 4px 8px;
-          border-radius: 999px;
-          font-size: 12px;
-          letter-spacing: 0.04em;
-        }
-        .modal-body {
-          padding: 22px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .tag-set {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .pill-outline {
-          border: 1px solid var(--border);
-          padding: 6px 10px;
-          border-radius: var(--radius-lg);
-          font-weight: 700;
-          font-size: 12px;
-          background: #f9fafb;
-        }
-        .modal-footer {
-          margin-top: auto;
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .cart-count {
-          background: var(--secondary);
-          color: #0f172a;
-          padding: 6px 10px;
-          border-radius: 999px;
-          font-weight: 800;
-          border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        .cart-list {
-          margin: 16px 0;
-          border-top: 1px solid var(--border);
-          border-bottom: 1px solid var(--border);
-          max-height: 320px;
-          overflow: auto;
-        }
-        .cart-modal-card {
-          width: min(920px, 100%);
-          grid-template-columns: 1fr;
-          display: flex;
-          flex-direction: column;
-          max-height: calc(100vh - 32px);
-        }
-        .cart-modal-card .modal-body {
-          flex: 1 1 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          overflow: auto;
-          min-height: 0;
-        }
-        .checkout-content {
-          flex: 1;
-          display: flex;
-          position: relative;
-        }
-        .checkout-pane {
-          padding-top: 6px;
-          flex: 1 1 auto;
-          min-height: 0;
-          display: none;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        .checkout-pane .scrollable {
-          max-height: none;
-        }
-        .pane-body {
-          flex: 1;
-          overflow: auto;
-        }
-        .cart-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-        }
-        .checkout-tabs {
-          display: flex;
-          gap: 8px;
-          margin: 8px 0 6px;
-        }
-        .tab-btn {
-          padding: 8px 14px;
-          border: 1px solid var(--border);
-          background: #fff;
-          color: var(--ink);
-          border-radius: var(--radius-sm);
-          cursor: pointer;
-        }
-        .tab-btn.is-active {
-          background: var(--primary);
-          color: #fff;
-          border-color: var(--primary);
-        }
-        .cart-footer-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          margin-top: 8px;
-        }
-        .cart-total {
-          font-weight: 800;
-          font-size: 18px;
-        }
-        .checkout-actions {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-        }
-        .form-grid {
-          display: grid;
-          gap: 10px;
-        }
-        .form-field {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          font-weight: 600;
-          color: var(--muted);
-          font-size: 13px;
-        }
-        .form-field span {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: var(--ink);
-        }
-        .required-pill {
-          display: inline-flex;
-          align-items: center;
-          padding: 2px 6px;
-          border-radius: 10px;
-          background: #fee2e2;
-          color: #b91c1c;
-          font-size: 11px;
-          font-weight: 700;
-        }
-        .required-pill.optional {
-          background: #e5e7eb;
-          color: var(--muted);
-        }
-        .required-pill.hidden {
-          display: none;
-        }
-        .form-field input,
-        .form-field textarea {
-          border: 1px solid var(--border);
-          border-radius: var(--radius-sm);
-          padding: 10px 12px;
-          font-size: 14px;
-          font-family: inherit;
-          background: #fff;
-          color: var(--ink);
-        }
-        .form-field textarea {
-          min-height: 80px;
-          resize: vertical;
-        }
-        .pay-methods {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .pay-pill {
-          padding: 10px 12px;
-          border: 1px solid var(--border);
-          background: #fff;
-          border-radius: var(--radius-sm);
-          cursor: pointer;
-          font-weight: 700;
-          color: var(--ink);
-        }
-        .pay-pill.is-active {
-          background: color-mix(in srgb, var(--secondary) 40%, #fff 60%);
-          border-color: var(--secondary);
-          color: #0b1222;
-        }
-        .payment-status {
-          margin-top: 8px;
-          font-size: 13px;
-          color: var(--muted);
-        }
-        .payment-complete {
-          display: none;
-          text-align: center;
-          color: #065f46;
-          margin-top: 12px;
-          gap: 10px;
-          align-items: center;
-          flex-direction: column;
-        }
-        .payment-complete .complete-icon {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: #22c55e;
-          color: #fff;
-          display: grid;
-          place-items: center;
-          font-weight: 900;
-          font-size: 34px;
-          box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.18);
-        }
-        .payment-complete .complete-text {
-          font-weight: 700;
-          font-size: 15px;
-        }
-        .payment-complete .complete-sub {
-          font-size: 13px;
-          color: #065f46;
-          opacity: 0.9;
-        }
-        .spinner {
-          display: inline-block;
-          width: 18px;
-          height: 18px;
-          border: 2px solid color-mix(in srgb, var(--border) 70%, #ffffff 30%);
-          border-top-color: var(--primary);
-          border-radius: 50%;
-          animation: spin 0.9s linear infinite;
-          vertical-align: middle;
-          margin-right: 8px;
-        }
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        .invoice-box {
-          margin-top: 12px;
-          display: grid;
-          place-items: center;
-          gap: 8px;
-          text-align: center;
-        }
-        .invoice-box img {
-          max-width: 220px;
-        }
-        .invoice-copy-row {
-          margin-top: 6px;
-          display: none;
-          gap: 8px;
-          align-items: center;
-          width: 100%;
-        }
-        .invoice-copy-row input {
-          flex: 1;
-          font-family: monospace;
-          font-size: 12px;
-          padding: 8px 10px;
-          border-radius: var(--radius-sm);
-          border: 1px solid var(--border);
-          background: #f8fafc;
-          color: var(--ink);
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .invoice-copy-row button {
-          white-space: nowrap;
-          font-weight: 700;
-        }
-        .cart-row {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 6px;
-          padding: 12px 0;
-          border-bottom: 1px solid #eef1f4;
-        }
-        .cart-row:last-child {
-          border-bottom: none;
-        }
-        .cart-row .qty {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-weight: 700;
-        }
-        .qty-btn {
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          border: 1px solid var(--border);
-          background: #fff;
-          font-weight: 800;
-        }
-        .toast {
-          position: fixed;
-          top: 16px;
-          right: 16px;
-          background: var(--ink);
-          color: #fff;
-          padding: 12px 14px;
-          border-radius: 10px;
-          box-shadow: none;
-          opacity: 0;
-          transform: translateY(-6px);
-          transition: opacity 160ms ease, transform 160ms ease;
-          z-index: 100;
-          font-weight: 700;
-          pointer-events: none;
-        }
-        .toast.is-visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        @media (max-width: 980px) {
-          .modal-card {
-            grid-template-columns: 1fr;
-            max-height: 88vh;
-          }
-          .modal-media {
-            max-height: 260px;
-          }
-        }
-        @media (max-width: 640px) {
-          .page {
-            padding: 5px 5px 5px;
-          }
-          .card-actions {
-            flex-direction: column;
-          }
-          .card-actions button {
-            width: 100%;
-          }
-        }
     </style>
   </head>
   <body>
-    <div class="page">
-      <section class="section">
-        <div class="filters">
-          <div class="filters-row">
-            <div class="tag-scroll" id="tag-list">
-              <button class="btn-chip is-active" data-tag="__all">All</button>
-            </div>
-            <div class="search-box">
-              <svg
-                width="18"
-                height="18"
-                fill="none"
-                stroke="#6b7280"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="8" cy="8" r="5.4"></circle>
-                <path d="m12 12 4 4"></path>
-              </svg>
-              <input
-                type="search"
-                id="search"
-                placeholder="Search products, tags, descriptions..."
-              />
-            </div>
-            <button class="btn-ghost btn-icon" id="open-cart">
-              <span>Cart</span>
-              <span class="cart-count" id="cart-count">0</span>
-            </button>
-          </div>
-        </div>
-        <div id="error" class="error" style="display: none"></div>
-        <div
-          id="loader"
-          class="loader"
-          aria-label="Loading products"
-          style="display: none"
-        ></div>
-        <div id="empty" class="empty" style="display: none">
-          No products to show yet. Keep items active in Inventory to display
-          them here.
-        </div>
-        <div id="grid" class="grid" aria-live="polite"></div>
-        <div id="pagination" class="pagination" aria-label="Pagination"></div>
-      </section>
-    </div>
-
-    <div class="modal" id="product-modal">
-      <div class="modal-card">
-        <button class="modal-close" data-close="product">×</button>
-        <div class="modal-media">
-          <button
-            class="slide-nav prev"
-            id="modal-prev"
-            aria-label="Previous image"
-          >
-            ‹
-          </button>
-          <img src="" alt="Product preview" id="modal-image" />
-          <button
-            class="slide-nav next"
-            id="modal-next"
-            aria-label="Next image"
-          >
-            ›
-          </button>
-          <div class="slide-indicator" id="modal-indicator"></div>
-        </div>
-        <div class="modal-body">
-          <div class="badge" id="modal-price"></div>
-          <h2 class="title" id="modal-title"></h2>
-          <p class="description" id="modal-description"></p>
-          <div class="tag-set" id="modal-tags"></div>
-          <div class="tag-set">
-            <span class="pill-outline" id="modal-stock"></span>
-          </div>
-          <div class="modal-footer">
-            <button class="btn-primary" id="modal-add">Add to cart</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal" id="cart-modal">
-      <div class="modal-card cart-modal-card">
-        <button class="modal-close" data-close="cart">×</button>
-        <div class="modal-body">
-          <div class="cart-header">
-            <div>
-              <h3 style="margin: 0">Cart</h3>
-              <div
-                class="text-caption"
-                style="color: var(--muted); font-size: 13px"
-              >
-                Review your items and checkout.
-              </div>
-            </div>
-            <span class="badge" id="cart-summary">0 items</span>
-          </div>
-
-          <div class="checkout-tabs" id="checkout-tabs">
-            <button class="tab-btn is-active" data-step="0">Cart</button>
-            <button class="tab-btn" data-step="1">Details</button>
-            <button class="tab-btn" data-step="2">Payment</button>
-          </div>
-
-          <div class="checkout-content">
-            <div class="checkout-pane" id="pane-cart" data-step="0">
-              <div class="pane-body">
-                <div class="cart-list scrollable" id="cart-items"></div>
-              </div>
-              <div class="cart-footer-row">
-                <div class="cart-total" id="cart-total">Total: 0</div>
-                <div class="checkout-actions">
-                  <button class="btn-ghost" id="checkout-next">Checkout</button>
-                </div>
-              </div>
-            </div>
-
+    <div id="q-app">
+      <q-layout view="hHh lpR lfr" class="webshop-layout">
+        <q-page-container>
+          <q-page class="q-pa-md">
             <div
-              class="checkout-pane"
-              id="pane-details"
-              data-step="1"
-              style="display: none"
+              class="q-gutter-y-sm"
+              style="max-width: 1200px; margin: 0 auto"
             >
-              <div class="pane-body">
-                <div class="form-grid">
-                  <label class="form-field">
-                    <span
-                      >Address
-                      <span class="required-pill hidden" id="required-address"
-                        >Required</span
-                      ></span
-                    >
-                    <textarea
-                      id="detail-address"
-                      placeholder="Shipping address"
-                    ></textarea>
-                  </label>
-                  <label class="form-field">
-                    <span
-                      >Email
-                      <span class="required-pill hidden" id="required-email"
-                        >Required</span
-                      ></span
-                    >
-                    <input
-                      type="email"
-                      id="detail-email"
-                      placeholder="you@example.com"
-                    />
-                  </label>
-                  <label class="form-field">
-                    <span
-                      >Phone / number
-                      <span class="required-pill hidden" id="required-number"
-                        >Required</span
-                      ></span
-                    >
-                    <input
-                      type="text"
-                      id="detail-number"
-                      placeholder="+1 555..."
-                    />
-                  </label>
+              <div class="row q-col-gutter-sm items-center">
+                <div class="col-12 col-md">
+                  <q-input
+                    dense
+                    filled
+                    v-model.trim="search"
+                    placeholder="Search products"
+                    clearable
+                    @update:model-value="onSearch"
+                  >
+                    <template #prepend>
+                      <q-icon name="search"></q-icon>
+                    </template>
+                  </q-input>
+                </div>
+                <div class="col-12 col-md-auto">
+                  <q-btn
+                    unelevated
+                    color="primary"
+                    icon="shopping_cart"
+                    @click="showCart = true"
+                    class="cart-btn"
+                  >
+                    <q-badge color="white" text-color="primary" floating>
+                      <span v-text="cartCount"></span>
+                    </q-badge>
+                  </q-btn>
                 </div>
               </div>
-              <div class="cart-footer-row">
-                <div class="cart-total" id="cart-total-details"></div>
-                <div class="checkout-actions">
-                  <button class="btn-ghost" id="details-back">Back</button>
-                  <button class="btn-primary" id="details-next">
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            <div
-              class="checkout-pane"
-              id="pane-payment"
-              data-step="2"
-              style="display: none"
-            >
-              <div class="pane-body">
-                <div class="payment-options">
-                  <div
-                    class="text-caption"
-                    style="margin-bottom: 6px; color: var(--muted)"
-                  >
-                    Choose a payment method
-                  </div>
-                  <div class="pay-methods">
-                    <button class="pay-pill" id="method-bitcoin">
-                      Bitcoin / Lightning
-                    </button>
-                    <button class="pay-pill" id="method-fiat">
-                      Fiat (Stripe)
-                    </button>
-                  </div>
-                </div>
-                <div class="invoice-box">
-                  <img
-                    id="invoice-qr-img"
-                    alt="Payment QR"
-                    style="display: none"
-                    title="Click to copy invoice"
-                  />
-                  <div
-                    class="payment-complete"
-                    id="payment-complete"
-                    aria-live="polite"
-                  >
-                    <div class="complete-icon" aria-hidden="true">✓</div>
-                    <div class="complete-text">
-                      Payment received. Thank you for your order.
-                    </div>
-                    <div class="complete-sub">
-                      Order ID <span id="order-id">—</span> (also emailed to
-                      you).
-                    </div>
-                  </div>
-                  <div class="payment-status" id="payment-status">
-                    Select a method to continue.
-                  </div>
-                  <div class="invoice-copy-row" id="invoice-copy-row">
-                    <input
-                      id="invoice-text"
-                      type="text"
-                      readonly
-                      aria-label="Payment invoice (bolt11 / request)"
-                    />
-                    <button class="btn-ghost" id="invoice-copy-btn">
-                      Copy invoice
-                    </button>
+              <div class="row q-pb-sm q-col-gutter-xs items-center">
+                <div class="col-12">
+                  <div class="row q-gutter-xs">
+                    <q-chip
+                      v-for="tag in tags"
+                      :key="tag"
+                      clickable
+                      outline
+                      :color="selectedTag === tag ? 'primary' : 'grey-6'"
+                      :text-color="selectedTag === tag ? 'white' : 'dark'"
+                      @click="selectTag(tag)"
+                    >
+                      <span v-text="tag === '__all' ? 'All' : tag"></span>
+                    </q-chip>
                   </div>
                 </div>
               </div>
-              <div class="cart-footer-row">
-                <div class="cart-total" id="cart-total-payment">
-                  Total: <span id="cart-total-payval"></span>
+
+              <q-banner v-if="error" class="bg-red-1 text-red-9" rounded>
+                <div v-text="error"></div>
+              </q-banner>
+
+              <div v-if="loading" class="row justify-center q-py-xl">
+                <q-spinner color="primary" size="42px"></q-spinner>
+              </div>
+
+              <div v-else-if="!filtered.length" class="empty-state">
+                <div class="text-subtitle1">No products to show yet.</div>
+                <div class="text-caption text-grey-6">
+                  Keep items active in Inventory to display them here.
                 </div>
-                <div class="checkout-actions">
-                  <button class="btn-ghost" id="payment-back">Back</button>
-                  <button class="btn-primary" id="pay-button">Pay now</button>
+              </div>
+
+              <div v-else class="row q-col-gutter-md">
+                <div
+                  v-for="product in filtered"
+                  :key="product.id"
+                  class="col-12 col-sm-6 col-md-4 col-lg-3"
+                >
+                  <q-card class="product-card column full-height">
+                    <q-img
+                      :src="productImage(product)"
+                      :ratio="1.9"
+                      class="product-image"
+                    >
+                      <div
+                        class="tag-chip"
+                        v-if="firstTag(product)"
+                        v-text="firstTag(product)"
+                      ></div>
+                    </q-img>
+                    <q-card-section class="q-px-sm q-pt-sm q-pb-none">
+                      <div class="text-subtitle1 text-weight-bold">
+                        <span v-text="product.name || 'Unnamed product'"></span>
+                      </div>
+                      <div class="text-caption text-grey-7 ellipsis-2-lines">
+                        <span
+                          v-text="product.description || 'No description provided yet.'"
+                        ></span>
+                      </div>
+                    </q-card-section>
+                    <q-card-section class="q-px-sm q-pt-xs q-pb-xs">
+                      <div class="row items-center justify-between">
+                        <div class="text-h6" v-text="priceLabel(product)"></div>
+                        <div class="text-caption text-grey-6">
+                          <span v-text="stockLabel(product)"></span>
+                        </div>
+                      </div>
+                    </q-card-section>
+                    <q-card-actions
+                      class="q-pt-none q-px-sm q-pb-sm q-gutter-sm"
+                    >
+                      <q-btn
+                        unelevated
+                        color="primary"
+                        label="Add to cart"
+                        class="col"
+                        @click="addToCart(product)"
+                      ></q-btn>
+                      <q-btn
+                        flat
+                        color="primary"
+                        label="Details"
+                        class="col"
+                        @click="openProduct(product)"
+                      ></q-btn>
+                    </q-card-actions>
+                  </q-card>
                 </div>
+              </div>
+
+              <div class="row justify-center q-mt-lg" v-if="pageCount > 1">
+                <q-pagination
+                  v-model="page"
+                  :max="pageCount"
+                  max-pages="7"
+                  direction-links
+                  boundary-links
+                  @update:model-value="onPageChange"
+                ></q-pagination>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </q-page>
+        </q-page-container>
+      </q-layout>
+
+      <q-dialog v-model="showProduct" persistent>
+        <q-card class="product-dialog">
+          <q-card-section class="row items-center justify-between">
+            <div class="text-h6" v-text="focusedItem?.name || 'Product'"></div>
+            <q-btn flat icon="close" @click="closeProduct"></q-btn>
+          </q-card-section>
+          <q-card-section>
+            <q-carousel
+              v-model="modalIndex"
+              swipeable
+              animated
+              height="260px"
+              control-color="primary"
+              navigation
+              v-if="modalImages.length"
+            >
+              <q-carousel-slide
+                v-for="(img, idx) in modalImages"
+                :key="idx"
+                :name="idx"
+                :img-src="img"
+              ></q-carousel-slide>
+            </q-carousel>
+            <div v-else class="text-caption text-grey-6">No images</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            <div class="text-subtitle1 text-weight-bold q-mb-xs">
+              <span v-text="priceLabel(focusedItem)"></span>
+            </div>
+            <div class="text-caption text-grey-7">
+              <span
+                v-text="focusedItem?.description || 'No description provided yet.'"
+              ></span>
+            </div>
+            <div class="q-mt-sm row q-gutter-sm">
+              <q-chip
+                v-for="tag in tagsFor(focusedItem)"
+                :key="tag"
+                color="grey-3"
+                text-color="dark"
+                size="sm"
+              >
+                <span v-text="tag"></span>
+              </q-chip>
+            </div>
+          </q-card-section>
+          <q-card-actions class="q-pa-md">
+            <q-btn
+              unelevated
+              color="primary"
+              label="Add to cart"
+              class="full-width"
+              @click="addToCart(focusedItem)"
+            ></q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
+      <q-dialog v-model="showCart" persistent>
+        <q-card class="cart-dialog">
+          <q-card-section class="row items-center justify-between">
+            <div class="text-h6">Checkout</div>
+            <q-btn flat icon="close" @click="showCart = false"></q-btn>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            <q-stepper
+              v-model="checkoutStep"
+              flat
+              animated
+              color="primary"
+              header-nav
+            >
+              <q-step :name="1" title="Cart" icon="shopping_cart">
+                <div
+                  v-if="!cart.length"
+                  class="text-caption text-grey-6 q-pa-md"
+                >
+                  Cart is empty. Add a product to get started.
+                </div>
+                <q-list v-else bordered separator>
+                  <q-item v-for="entry in cart" :key="entry.id">
+                    <q-item-section>
+                      <q-item-label
+                        class="text-weight-bold"
+                        v-text="entry.name"
+                      ></q-item-label>
+                      <q-item-label
+                        caption
+                        v-text="priceLabel(entry)"
+                      ></q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                      <div class="row items-center q-gutter-xs">
+                        <q-btn
+                          dense
+                          flat
+                          icon="remove"
+                          @click="updateQuantity(entry.id, -1)"
+                        ></q-btn>
+                        <div class="text-body2" v-text="entry.quantity"></div>
+                        <q-btn
+                          dense
+                          flat
+                          icon="add"
+                          @click="updateQuantity(entry.id, 1)"
+                        ></q-btn>
+                      </div>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+                <div class="row justify-between items-center q-mt-md">
+                  <div class="text-subtitle2">Total</div>
+                  <div class="text-h6" v-text="cartTotalLabel"></div>
+                </div>
+                <div class="row justify-end q-mt-md">
+                  <q-btn
+                    unelevated
+                    color="primary"
+                    label="Continue"
+                    :disable="!cart.length"
+                    @click="checkoutStep = 2"
+                  ></q-btn>
+                </div>
+              </q-step>
+
+              <q-step :name="2" title="Details" icon="local_shipping">
+                <q-input
+                  filled
+                  v-model.trim="checkoutDetails.address"
+                  label="Shipping address"
+                  type="textarea"
+                  :hint="requiredLabel('address')"
+                ></q-input>
+                <q-input
+                  filled
+                  v-model.trim="checkoutDetails.email"
+                  label="Email"
+                  :hint="requiredLabel('email')"
+                ></q-input>
+                <q-input
+                  filled
+                  v-model.trim="checkoutDetails.number"
+                  label="Phone"
+                  :hint="requiredLabel('number')"
+                ></q-input>
+                <div class="row justify-between q-mt-md">
+                  <q-btn
+                    flat
+                    color="primary"
+                    label="Back"
+                    @click="checkoutStep = 1"
+                  ></q-btn>
+                  <q-btn
+                    unelevated
+                    color="primary"
+                    label="Continue"
+                    @click="goToPayment"
+                  ></q-btn>
+                </div>
+              </q-step>
+
+              <q-step :name="3" title="Payment" icon="credit_card">
+                <div class="row q-col-gutter-sm q-mb-md">
+                  <div class="col-12 col-sm-auto" v-if="allowBitcoin">
+                    <q-btn
+                      outline
+                      color="primary"
+                      :label="'Bitcoin / Lightning'"
+                      :class="{'is-active': checkoutMethod === 'bitcoin'}"
+                      @click="selectMethod('bitcoin')"
+                    ></q-btn>
+                  </div>
+                  <div class="col-12 col-sm-auto" v-if="allowFiat">
+                    <q-btn
+                      outline
+                      color="primary"
+                      :label="fiatLabel"
+                      :class="{'is-active': checkoutMethod === 'fiat'}"
+                      @click="selectMethod('fiat')"
+                    ></q-btn>
+                  </div>
+                </div>
+
+                <q-banner
+                  v-if="paymentStatus"
+                  class="bg-grey-2 text-grey-9"
+                  rounded
+                >
+                  <div v-text="paymentStatus"></div>
+                </q-banner>
+
+                <div v-if="invoicePaid" class="q-mt-md">
+                  <q-banner class="bg-green-1 text-green-9" rounded>
+                    <div>Payment received. Thank you for your order.</div>
+                    <div class="text-caption">
+                      Order ID <span v-text="orderId || '—'"></span>
+                    </div>
+                    <div v-if="orderPublicUrl" class="q-mt-sm">
+                      <q-btn
+                        flat
+                        color="primary"
+                        label="View order"
+                        :href="orderPublicUrl"
+                        target="_blank"
+                        rel="noopener"
+                      ></q-btn>
+                    </div>
+                  </q-banner>
+                </div>
+
+                <div v-if="invoiceQrSrc" class="q-mt-md">
+                  <q-card
+                    flat
+                    bordered
+                    class="q-pa-sm bg-white rounded-borders"
+                  >
+                    <div class="flex flex-center">
+                      <q-img
+                        :src="invoiceQrSrc"
+                        :ratio="1"
+                        class="invoice-qr rounded-borders"
+                        fit="contain"
+                        @click="copyInvoice"
+                      ></q-img>
+                    </div>
+                    <div class="text-caption text-grey-6 text-center q-mt-xs">
+                      Click QR to copy invoice
+                    </div>
+                  </q-card>
+                </div>
+                <div class="row justify-between q-mt-md">
+                  <q-btn
+                    flat
+                    color="primary"
+                    label="Back"
+                    @click="checkoutStep = 2"
+                  ></q-btn>
+                  <q-btn
+                    unelevated
+                    color="primary"
+                    label="Pay now"
+                    :loading="isPaying"
+                    :disable="!checkoutMethod || !cart.length"
+                    @click="submitCheckout"
+                  ></q-btn>
+                </div>
+              </q-step>
+            </q-stepper>
+          </q-card-section>
+        </q-card>
+      </q-dialog>
     </div>
-
-    <div class="toast" id="toast"></div>
 
     <script>
       const SHOP_DATA = {{ shop | tojson | safe if shop else '{}' }};
       const SHOP_ID = '{{ shop_id }}';
       const PLACEHOLDER_IMG = 'https://dummyimage.com/900x700/f3f4f6/9ca3af.png&text=No+Image';
-
-
-      (() => {
-        const state = {
-          shop: SHOP_DATA || {},
-          inventoryId:
-            (SHOP_DATA && SHOP_DATA.inventory_id) ||
-            new URLSearchParams(window.location.search).get('inventory_id') ||
-            '',
-          products: [],
-          filtered: [],
-          tags: ['__all'],
-          search: '',
-          selectedTag: '__all',
-          loading: false,
-          error: '',
-          cart: [],
-          focusedItem: null,
-          modalImages: [],
-          modalIndex: 0,
-          page: 1,
-          pageSize: 8,
-          totalItems: 0,
-          checkoutStep: 0,
-          checkoutDetails: {
-            address: '',
-            email: '',
-            number: ''
-          },
-          orderId: '',
-          checkoutMethod: '',
-          isPaying: false,
-          invoice: null,
-          invoiceSocket: null,
-          pendingItemId: ''
-        };
-
-        const els = {
-          grid: document.getElementById('grid'),
-          search: document.getElementById('search'),
-          error: document.getElementById('error'),
-          empty: document.getElementById('empty'),
-          loader: document.getElementById('loader'),
-          tagList: document.getElementById('tag-list'),
-          cartCount: document.getElementById('cart-count'),
-          openCart: document.getElementById('open-cart'),
-          cartModal: document.getElementById('cart-modal'),
-          productModal: document.getElementById('product-modal'),
-          toast: document.getElementById('toast'),
-          pagination: document.getElementById('pagination'),
-          modalImage: document.getElementById('modal-image'),
-          modalPrice: document.getElementById('modal-price'),
-          modalTitle: document.getElementById('modal-title'),
-          modalDescription: document.getElementById('modal-description'),
-          modalTags: document.getElementById('modal-tags'),
-          modalStock: document.getElementById('modal-stock'),
-          modalAdd: document.getElementById('modal-add'),
-          modalPrev: document.getElementById('modal-prev'),
-          modalNext: document.getElementById('modal-next'),
-          modalIndicator: document.getElementById('modal-indicator'),
-          cartItems: document.getElementById('cart-items'),
-          cartSummary: document.getElementById('cart-summary'),
-          cartTotal: document.getElementById('cart-total'),
-          cartTotalDetails: document.getElementById('cart-total-details'),
-          checkoutTabs: document.getElementById('checkout-tabs'),
-          paneCart: document.getElementById('pane-cart'),
-          paneDetails: document.getElementById('pane-details'),
-          panePayment: document.getElementById('pane-payment'),
-          checkoutNext: document.getElementById('checkout-next'),
-          detailsNext: document.getElementById('details-next'),
-          detailsBack: document.getElementById('details-back'),
-          paymentBack: document.getElementById('payment-back'),
-          payButton: document.getElementById('pay-button'),
-          detailAddress: document.getElementById('detail-address'),
-          detailEmail: document.getElementById('detail-email'),
-          detailNumber: document.getElementById('detail-number'),
-          requiredAddress: document.getElementById('required-address'),
-          requiredEmail: document.getElementById('required-email'),
-          requiredNumber: document.getElementById('required-number'),
-          methodBitcoin: document.getElementById('method-bitcoin'),
-          methodFiat: document.getElementById('method-fiat'),
-          paymentStatus: document.getElementById('payment-status'),
-          paymentComplete: document.getElementById('payment-complete'),
-          orderId: document.getElementById('order-id'),
-          invoiceQr: document.getElementById('invoice-qr-img'),
-          invoiceCopyRow: document.getElementById('invoice-copy-row'),
-          invoiceCopyInput: document.getElementById('invoice-text'),
-          invoiceCopyBtn: document.getElementById('invoice-copy-btn'),
-          cartTotalPayval: document.getElementById('cart-total-payval')
-        };
-
-        function setTheme() {
-          const primary = state.shop.primary_color || '{{ primary_color }}';
-          const secondary = state.shop.secondary_color || '{{ secondary_color }}';
-          document.documentElement.style.setProperty('--primary', primary);
-          document.documentElement.style.setProperty('--secondary', secondary);
-        }
-
-        function setPaymentStatus(message, loading = false) {
-          if (!els.paymentStatus) return;
-          if (loading) {
-            els.paymentStatus.innerHTML = `<span class="spinner"></span>${message}`;
-          } else {
-            els.paymentStatus.textContent = message;
-          }
-        }
-
-        function updateRequiredLabels() {
-          const req = requiredFields();
-          const map = {
-            address: els.requiredAddress,
-            email: els.requiredEmail,
-            number: els.requiredNumber
-          };
-          Object.entries(map).forEach(([key, el]) => {
-            const needed = req.includes(key);
-            if (el) {
-              el.textContent = needed ? 'Required' : 'Optional';
-              el.classList.toggle('optional', !needed);
-              el.classList.remove('hidden');
-            }
-            const inputEl =
-              key === 'address'
-                ? els.detailAddress
-                : key === 'email'
-                  ? els.detailEmail
-                  : els.detailNumber;
-            if (inputEl) {
-              inputEl.required = needed;
-              inputEl.setAttribute('aria-required', needed ? 'true' : 'false');
-            }
-          });
-        }
-
-        function validateCustomerInfo() {
-          const req = requiredFields();
-          const missing = [];
-          const address = (state.checkoutDetails.address || '').trim();
-          const email = (state.checkoutDetails.email || '').trim();
-          const number = (state.checkoutDetails.number || '').trim();
-          if (req.includes('address') && !address) missing.push('shipping address');
-          if (req.includes('email') && !email) missing.push('email');
-          if (req.includes('number') && !number) missing.push('number');
-          if (missing.length) {
-            toast(`Please provide: ${missing.join(', ')}`);
-            return false;
-          }
-          return true;
-        }
-
-        function renderInvoice() {
-          if (!els.invoiceQr) return;
-          const paid = Boolean(state.invoice && state.invoice.paid);
-          if (!state.invoice || !state.invoice.request || paid) {
-            els.invoiceQr.style.display = 'none';
-            els.invoiceQr.removeAttribute('src');
-          } else {
-            const text = state.invoice.request || '';
-            els.invoiceQr.src = `/api/v1/qrcode/${encodeURIComponent(text)}`;
-            els.invoiceQr.alt = 'Payment QR';
-            els.invoiceQr.style.display = 'block';
-          }
-          if (els.paymentComplete) {
-            els.paymentComplete.style.display = paid ? 'flex' : 'none';
-          }
-          if (els.orderId) {
-            els.orderId.textContent = state.orderId || '—';
-          }
-          if (els.invoiceCopyRow) {
-            const showCopy = Boolean(state.invoice && state.invoice.request && !paid);
-            els.invoiceCopyRow.style.display = showCopy ? 'flex' : 'none';
-          }
-          if (els.invoiceCopyInput) {
-            const text = state.invoice && state.invoice.request && !paid ? state.invoice.request : '';
-            els.invoiceCopyInput.value = text;
-          }
-        }
-
-        function markInvoicePaid() {
-          state.invoice.paid = true;
-          if (els.paymentStatus) els.paymentStatus.textContent = '';
-          renderInvoice();
-          toast('Payment received');
-          state.cart = [];
-          renderCart();
-          updateCheckoutUI();
-          renderPayButton();
-          if (state.invoiceSocket) {
-            state.invoiceSocket.close();
-            state.invoiceSocket = null;
-          }
-        }
-
-        function legacyCopy(text) {
-          const textarea = document.createElement('textarea');
-          textarea.value = text;
-          textarea.setAttribute('readonly', '');
-          textarea.style.position = 'fixed';
-          textarea.style.opacity = '0';
-          document.body.appendChild(textarea);
-          textarea.select();
-          textarea.setSelectionRange(0, textarea.value.length);
-          const ok = document.execCommand('copy');
-          document.body.removeChild(textarea);
-          return ok;
-        }
-
-        async function copyInvoice() {
-          if (!state.invoice || !state.invoice.request) return;
-          const text = state.invoice.request;
-          try {
-            await navigator.clipboard.writeText(text);
-            toast('Invoice copied to clipboard');
-            return;
-          } catch (err) {
-            try {
-              const ok = legacyCopy(text);
-              if (ok) {
-                toast('Invoice copied to clipboard');
-                return;
-              }
-            } catch (err2) {
-              /* ignore */
-            }
-          }
-          if (els.invoiceCopyInput) {
-            els.invoiceCopyInput.focus();
-            els.invoiceCopyInput.select();
-          }
-          toast('Unable to copy invoice');
-        }
-
-        function startInvoiceWatcher() {
-          if (!state.invoice || !state.invoice.hash) return;
-          if (state.invoiceSocket) {
-            state.invoiceSocket.close();
-          }
-          const url = new URL(window.location);
-          url.protocol = url.protocol === 'https:' ? 'wss' : 'ws';
-          url.pathname = `/api/v1/ws/${state.invoice.hash}`;
-          const ws = new WebSocket(url);
-          state.invoiceSocket = ws;
-          ws.addEventListener('message', async ({data}) => {
-            const msg = JSON.parse(data);
-            const status = (msg.status || '').toString().toLowerCase();
-            const settled = status === 'success' || msg.pending === false;
-            if (settled) {
-              markInvoicePaid();
-            }
-          });
-        }
-
-        function toast(message) {
-          if (!els.toast) return;
-          els.toast.textContent = message;
-          els.toast.classList.add('is-visible');
-          setTimeout(() => els.toast.classList.remove('is-visible'), 2200);
-        }
-
-        function formatAmount(amount) {
-          const numeric = Number(amount) || 0;
-          return new Intl.NumberFormat(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }).format(numeric);
-        }
-
-        function cartTotalValue() {
-          return state.cart.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0);
-        }
-
-        function currencyLabel() {
-          return state.shop.currency || 'sat';
-        }
-
-        function parseRequiredInfo(raw) {
-          if (!raw) return [];
-          if (Array.isArray(raw)) {
-            return raw.map(v => String(v).trim().toLowerCase()).filter(Boolean);
-          }
-          return String(raw || '')
-            .split(',')
-            .map(v => v.trim().toLowerCase())
-            .filter(Boolean);
-        }
-
-        function requiredFields() {
-          return parseRequiredInfo(state.shop.required_customer_info);
-        }
-
-        function isFiatCurrency(currency) {
-          const cur = (currency || '').toString().trim().toLowerCase();
-          if (!cur) return false;
-          return !['sat', 'sats', 'btc', 'bitcoin'].includes(cur);
-        }
-
-        function priceLabel(item) {
-          return `${formatAmount(item.price)} ${currencyLabel()}`;
-        }
-
-        function stockLabel(item) {
-          const stock = item.quantity_in_stock;
-          if (stock === null || stock === undefined) return 'in stock';
-          return `${stock} in stock`;
-        }
-
-        function parseTags(raw) {
-          if (!raw) return [];
-          if (Array.isArray(raw)) return raw.map(t => normalizeTag(t, false)).filter(Boolean);
-          const str = String(raw).trim();
-          if (!str) return [];
-          try {
-            const parsed = JSON.parse(str);
-            if (Array.isArray(parsed)) return parsed.map(t => normalizeTag(t, false)).filter(Boolean);
-          } catch (err) {/* ignore */}
-          return str
-            .split(',')
-            .map(t => normalizeTag(t, false))
-            .filter(Boolean);
-        }
-
-        function normalizeTag(tag, toLower = true) {
-          if (tag === undefined || tag === null) return '';
-          const trimmed = String(tag).trim();
-          return toLower ? trimmed.toLowerCase() : trimmed;
-        }
-
-        function parseImages(item) {
-          if (!item || !item.images) return [];
-
-          const toAssetUrl = id => {
-            if (!id) return '';
-            const val = String(id).trim();
-            if (!val) return '';
-            if (val.startsWith('http')) return val;
-            if (val.startsWith('/api/')) return val;
-            return `/api/v1/assets/${val}/binary`;
-          };
-
-          const append = list => list.map(toAssetUrl).filter(Boolean);
-
-          if (Array.isArray(item.images)) return append(item.images);
-
-          const raw = String(item.images).trim();
-          if (!raw) return [];
-
-          try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return append(parsed);
-          } catch (err) {
-            /* ignore parse errors */
-          }
-
-          if (raw.includes('|||')) return append(raw.split('|||'));
-          if (raw.includes(',')) return append(raw.split(','));
-          if (raw.startsWith('data:')) return [raw];
-          return append([raw]);
-        }
-
-        function parseImage(item) {
-          const imgs = parseImages(item);
-          return imgs[0] || '';
-        }
-
-        function tagsFor(item) {
-          if (!item.__tags) {
-            item.__tags = parseTags(item.tags);
-            item.__tagsLower = item.__tags.map(t => normalizeTag(t));
-          }
-          return item.__tags;
-        }
-
-        function tagsLowerFor(item) {
-          if (!item.__tagsLower) tagsFor(item);
-          return item.__tagsLower || [];
-        }
-
-        function omitTagsLowerFor(item) {
-          if (!item.__omitTagsLower) {
-            const raw = parseTags(item.omit_tags);
-            item.__omitTagsLower = raw.map(t => normalizeTag(t));
-          }
-          return item.__omitTagsLower || [];
-        }
-
-        function renderTags() {
-          if (!els.tagList) return;
-          els.tagList.innerHTML = '';
-          state.tags.forEach(tag => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-chip';
-            btn.dataset.tag = tag;
-            btn.textContent = tag === '__all' ? 'All' : tag;
-            els.tagList.appendChild(btn);
-          });
-          updateTagActive();
-        }
-
-        function updateTagActive() {
-          if (!els.tagList) return;
-          const active = state.selectedTag.toLowerCase();
-          els.tagList.querySelectorAll('button[data-tag]').forEach(btn => {
-            btn.classList.toggle(
-              'is-active',
-              btn.dataset.tag.toLowerCase() === active
-            );
-          });
-        }
-
-        function filterProducts() {
-          const activeTag = normalizeTag(state.selectedTag);
-          const allowed = normalizeTag(state.shop.allowed_tags || '')
-            .split(',')
-            .map(t => t.trim())
-            .filter(Boolean);
-          const omitList = normalizeTag(state.shop.omit_tags || '')
-            .split(',')
-            .map(t => t.trim())
-            .filter(Boolean);
-          state.filtered = state.products.filter(item => {
-            const itemTags = tagsLowerFor(item);
-            const matchesTag = activeTag === '__all' || itemTags.includes(activeTag);
-            const matchesAllowed = !allowed.length || itemTags.some(t => allowed.includes(t));
-            const itemOmit = omitTagsLowerFor(item);
-            const hasOmit = omitList.length && itemOmit.some(t => omitList.includes(t));
-            return matchesTag && matchesAllowed && !hasOmit;
-          });
-          renderProducts();
-          updateTagActive();
-        }
-
-        function renderProducts() {
-          if (!els.grid) return;
-          els.grid.innerHTML = '';
-          if (state.loading) {
-            els.loader.style.display = 'block';
-            els.empty.style.display = 'none';
-            return;
-          }
-          els.loader.style.display = 'none';
-          if (!state.filtered.length) {
-            els.empty.style.display = 'block';
-            if (els.pagination) els.pagination.style.display = 'none';
-            return;
-          }
-          els.empty.style.display = 'none';
-          state.filtered.forEach(item => {
-            const card = document.createElement('article');
-            card.className = 'product-card';
-            const imgUrl = parseImage(item);
-            const itemTags = tagsFor(item);
-            card.innerHTML = `
-              <div class="product-thumb" style="${imgUrl ? `background-image:url('${imgUrl}')` : ''}">
-                ${itemTags[0] ? `<div class="tag-label">${itemTags[0]}</div>` : ''}
-              </div>
-              <div class="product-body">
-                <div class="title">${item.name || 'Unnamed product'}</div>
-                <div class="description">${item.description || 'No description provided yet.'}</div>
-                <div class="meta">
-                  <span class="price">${priceLabel(item)}</span>
-                  <span class="stock">${stockLabel(item)}</span>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="btn-ghost is-secondary" data-view>View</button>
-                <button class="btn-primary" data-add>Add</button>
-              </div>
-            `;
-            card.querySelector('[data-view]').onclick = e => {
-              e.stopPropagation();
-              openProductModal(item);
-            };
-            card.querySelector('[data-add]').onclick = e => {
-              e.stopPropagation();
-              addToCart(item);
-            };
-            card.onclick = e => {
-              if (e.target.dataset.add || e.target.dataset.view) return;
-              openProductModal(item);
-            };
-            els.grid.appendChild(card);
-          });
-          renderPagination();
-        }
-
-        function updateCounts() {
-          const totalVal = cartTotalValue();
-          const total = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-          const totalLabel = `${total} item${total === 1 ? '' : 's'}`;
-          els.cartCount.textContent = total;
-          els.cartSummary.textContent = totalLabel;
-          els.cartTotal.textContent = `Total: ${formatAmount(
-            totalVal
-          )} ${currencyLabel()}`;
-          if (els.cartTotalDetails) {
-            els.cartTotalDetails.textContent = `Total: ${formatAmount(totalVal)} ${currencyLabel()}`;
-          }
-          updateCheckoutUI();
-        }
-
-        function renderCart() {
-          if (!els.cartItems) return;
-          els.cartItems.innerHTML = '';
-          if (!state.cart.length) {
-            els.cartItems.innerHTML = '<div class="empty" style="margin:8px 0;">Cart is empty. Add a product to get started.</div>';
-            updateCounts();
-            return;
-          }
-          state.cart.forEach(entry => {
-            const row = document.createElement('div');
-            row.className = 'cart-row';
-            row.innerHTML = `
-              <div>
-                <div class="title" style="margin:0 0 4px;font-size:15px;">${entry.name}</div>
-                <div class="stock">${priceLabel(entry)}</div>
-              </div>
-              <div class="qty">
-                <button class="qty-btn" data-dec>-</button>
-                <span>${entry.quantity}</span>
-                <button class="qty-btn" data-inc>+</button>
-              </div>
-            `;
-            row.querySelector('[data-dec]').onclick = () => updateQuantity(entry.id, -1);
-            row.querySelector('[data-inc]').onclick = () => updateQuantity(entry.id, 1);
-            els.cartItems.appendChild(row);
-          });
-          updateCounts();
-        }
-
-        function updateQuantity(id, delta) {
-          const entry = state.cart.find(i => i.id === id);
-          if (!entry) return;
-          const limit =
-            typeof entry.quantity_in_stock === 'number'
-              ? Math.max(entry.quantity_in_stock, 0)
-              : Infinity;
-          entry.quantity = Math.min(Math.max(entry.quantity + delta, 0), limit || 0);
-          if (entry.quantity <= 0) {
-            state.cart = state.cart.filter(i => i.id !== id);
-          }
-          renderCart();
-        }
-
-        function addToCart(item) {
-          if (state.invoice && state.invoice.paid) {
-            state.invoice = null;
-            state.orderId = '';
-            if (els.paymentStatus) els.paymentStatus.textContent = 'Select a method to continue.';
-            renderInvoice();
-          }
-          const existing = state.cart.find(i => i.id === item.id);
-          const limit =
-            typeof item.quantity_in_stock === 'number'
-              ? Math.max(item.quantity_in_stock, 0)
-              : Infinity;
-          if (existing) {
-            if (existing.quantity >= limit) return;
-            existing.quantity += 1;
-          } else {
-            state.cart.push({
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              quantity: limit === Infinity ? 1 : Math.min(1, limit),
-              quantity_in_stock: item.quantity_in_stock,
-              weight_grams: item.weight_grams
-            });
-          }
-          renderCart();
-          toast('Added to cart');
-        }
-
-        function openProductModal(item) {
-          state.focusedItem = item;
-          const images = parseImages(item);
-          state.modalImages = images.length ? images : [PLACEHOLDER_IMG];
-          state.modalIndex = 0;
-          updateModalImage();
-          els.modalTitle.textContent = item.name || 'Untitled product';
-          els.modalDescription.textContent = item.description || 'No description provided yet.';
-          els.modalPrice.textContent = priceLabel(item);
-          els.modalStock.textContent = stockLabel(item);
-          els.modalTags.innerHTML = '';
-          parseTags(item.tags).forEach(tag => {
-            const span = document.createElement('span');
-            span.className = 'pill-outline';
-            span.textContent = tag;
-            els.modalTags.appendChild(span);
-          });
-          els.modalAdd.onclick = () => addToCart(item);
-          els.productModal.classList.add('is-visible');
-        }
-
-        function closeModal(which) {
-          if (which === 'product') els.productModal.classList.remove('is-visible');
-          if (which === 'cart') els.cartModal.classList.remove('is-visible');
-        }
-
-        function updateModalImage() {
-          if (!els.modalImage) return;
-          const total = state.modalImages.length;
-          const current = Math.max(0, Math.min(state.modalIndex, total - 1));
-          state.modalIndex = current;
-          els.modalImage.src = state.modalImages[current] || PLACEHOLDER_IMG;
-          if (els.modalIndicator) {
-            els.modalIndicator.textContent = total > 1 ? `${current + 1} / ${total}` : '';
-          }
-          if (els.modalPrev) els.modalPrev.disabled = total <= 1;
-          if (els.modalNext) els.modalNext.disabled = total <= 1;
-        }
-
-        function changeModalImage(delta) {
-          if (!state.modalImages.length) return;
-          const total = state.modalImages.length;
-          state.modalIndex = (state.modalIndex + delta + total) % total;
-          updateModalImage();
-        }
-
-        function updateCheckoutUI() {
-          const tabs = els.checkoutTabs ? els.checkoutTabs.querySelectorAll('button[data-step]') : [];
-          tabs.forEach(btn => {
-            const step = Number(btn.dataset.step || 0);
-            btn.classList.toggle('is-active', step === state.checkoutStep);
-          });
-
-          if (els.paneCart) els.paneCart.style.display = state.checkoutStep === 0 ? 'flex' : 'none';
-          if (els.paneDetails) els.paneDetails.style.display = state.checkoutStep === 1 ? 'flex' : 'none';
-          if (els.panePayment) els.panePayment.style.display = state.checkoutStep === 2 ? 'flex' : 'none';
-
-          if (els.checkoutNext) {
-            els.checkoutNext.disabled = state.cart.length === 0;
-          }
-
-          const allowBitcoin = state.shop.allow_bitcoin !== false;
-          const allowFiat = state.shop.allow_fiat !== false && isFiatCurrency(state.shop.currency);
-          if (els.methodBitcoin) {
-            els.methodBitcoin.style.display = allowBitcoin ? 'inline-flex' : 'none';
-            els.methodBitcoin.classList.toggle('is-active', state.checkoutMethod === 'bitcoin');
-          }
-          if (els.methodFiat) {
-            els.methodFiat.style.display = allowFiat ? 'inline-flex' : 'none';
-            els.methodFiat.classList.toggle('is-active', state.checkoutMethod === 'fiat');
-            const fiatLabel = isFiatCurrency(state.shop.currency)
-              ? `${state.shop.currency.toUpperCase()}`
-              : 'Fiat (Stripe)';
-            els.methodFiat.textContent = fiatLabel;
-          }
-          if (!allowBitcoin && state.checkoutMethod === 'bitcoin') state.checkoutMethod = '';
-          if (!allowFiat && state.checkoutMethod === 'fiat') state.checkoutMethod = '';
-          if (!allowBitcoin && !allowFiat && els.paymentStatus) {
-            els.paymentStatus.textContent = 'No payment methods enabled for this shop.';
-          }
-
-          if (els.detailAddress) els.detailAddress.value = state.checkoutDetails.address || '';
-          if (els.detailEmail) els.detailEmail.value = state.checkoutDetails.email || '';
-          if (els.detailNumber) els.detailNumber.value = state.checkoutDetails.number || '';
-          renderInvoice();
-
-          const totalVal = cartTotalValue();
-          if (els.cartTotalPayval) {
-            els.cartTotalPayval.textContent = `${formatAmount(totalVal)} ${currencyLabel()}`;
-          }
-          renderPayButton();
-          updateRequiredLabels();
-        }
-
-        function renderPayButton() {
-          if (!els.payButton) return;
-          const disabled =
-            !state.checkoutMethod || !state.cart.length || state.isPaying;
-          els.payButton.disabled = disabled;
-          els.payButton.textContent = state.isPaying ? 'Processing...' : 'Pay now';
-        }
-
-        function setCheckoutStep(step) {
-          state.checkoutStep = Math.max(0, Math.min(step, 2));
-          updateCheckoutUI();
-        }
-
-        async function submitCheckout() {
-          if (!state.checkoutMethod) {
-            toast('Select a payment method');
-            return;
-          }
-          if (!state.cart.length) {
-            toast('Cart is empty');
-            return;
-          }
-          if (!validateCustomerInfo()) {
-            return;
-          }
-          state.isPaying = true;
-          renderPayButton();
-          setPaymentStatus('Creating order...', true);
-          try {
-            const summaryName =
-              state.cart.length === 1
-                ? state.cart[0].name
-                : `${state.cart.length} items`;
-            const payload = {
-              product: summaryName,
-              quantity: state.cart.reduce((sum, item) => sum + item.quantity, 0),
-              address: state.checkoutDetails.address || null,
-              email: state.checkoutDetails.email || null,
-              number: state.checkoutDetails.number || null,
-              items: state.cart.map(entry => ({
-                id: entry.id,
-                name: entry.name,
-                quantity: entry.quantity,
-                price: entry.price,
-                weight_grams: entry.weight_grams
-              })),
-              payment_method: state.checkoutMethod,
-              fiat_provider:
-                state.checkoutMethod === 'fiat'
-                  ? state.shop.fiat_provider || null
-                  : null
-            };
-            const baseUrl = window.location.origin
-            const response = await fetch(
-              `/webshop/api/v1/client_data/public/${SHOP_ID}?base_url=${encodeURIComponent(baseUrl)}`,
-              {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-              }
-            );
-            if (!response.ok) throw new Error('Failed to start checkout');
-            const data = await response.json();
-            state.orderId = data.client_data_id || state.orderId || '';
-            const isFiat = Boolean(data.is_fiat);
-            const fiatLink = data.fiat_payment_request || data.payment_request;
-            if (data.payment_request || data.fiat_payment_request) {
-              state.invoice = {
-                request: data.payment_request,
-                hash: data.payment_hash,
-                paid: false
-              }
-              startInvoiceWatcher();
-              if (isFiat) {
-                const checkoutUrl = fiatLink;
-                if (checkoutUrl) {
-                  window.open(checkoutUrl, '_blank', 'noopener');
-                  setPaymentStatus('Redirected to payment provider...', false);
-                } else {
-                  setPaymentStatus('Missing fiat checkout link.', false);
-                }
-              } else {
-                renderInvoice();
-              }
-            }
-            setPaymentStatus(
-              isFiat
-                ? 'Awaiting payment...'
-                : data.payment_request
-                  ? 'Awaiting payment...'
-                  : 'Order captured.',
-              false
-            );
-            toast('Order captured. Complete payment to finish.');
-          } catch (err) {
-            console.error(err);
-            setPaymentStatus('Unable to start checkout.', false);
-            toast('Could not start checkout');
-          } finally {
-            state.isPaying = false;
-            renderPayButton();
-          }
-        }
-
-        function totalPages() {
-          const total = Math.max(0, Number(state.totalItems) || 0);
-          const pages = Math.ceil(total / state.pageSize);
-          return Math.max(1, pages || 0);
-        }
-
-        function setPage(page) {
-          const max = totalPages();
-          const next = Math.min(Math.max(page, 1), max);
-          if (next === state.page) return;
-          state.page = next;
-          fetchProducts();
-        }
-
-        function renderPagination() {
-          if (!els.pagination) return;
-          els.pagination.innerHTML = '';
-          const max = totalPages();
-          const total = Math.max(0, Number(state.totalItems) || 0);
-          if (max <= 1 || total <= state.pageSize) {
-            els.pagination.style.display = 'none';
-            return;
-          }
-          els.pagination.style.display = 'flex';
-
-          const createBtn = (label, page, disabled = false, isActive = false) => {
-            const btn = document.createElement('button');
-            btn.className = 'pager-btn' + (isActive ? ' is-active' : '');
-            btn.textContent = label;
-            btn.disabled = disabled;
-            btn.onclick = () => setPage(page);
-            els.pagination.appendChild(btn);
-          };
-
-          createBtn('‹', state.page - 1, state.page === 1, false);
-          for (let p = 1; p <= max; p++) {
-            createBtn(p, p, false, p === state.page);
-          }
-          createBtn('›', state.page + 1, state.page === max, false);
-        }
-
-        function showCart() {
-          els.cartModal.classList.add('is-visible');
-          state.checkoutStep = 0;
-          state.checkoutMethod = '';
-          updateCheckoutUI();
-        }
-
-        function attachEvents() {
-          els.search.addEventListener('input', e => {
-            state.search = e.target.value;
-            state.page = 1;
-            fetchProducts();
-          });
-          if (els.tagList) {
-            els.tagList.addEventListener('click', e => {
-              const btn = e.target.closest('button[data-tag]');
-              if (!btn) return;
-              const tagValue = normalizeTag(btn.dataset.tag);
-              state.selectedTag = tagValue;
-              state.page = 1;
-              fetchProducts();
-            });
-          }
-          els.openCart.onclick = showCart;
-          document.querySelectorAll('.modal-close').forEach(btn => {
-            btn.onclick = () => closeModal(btn.dataset.close);
-          });
-          window.addEventListener('keyup', e => {
-            if (e.key === 'Escape') {
-              closeModal('product');
-              closeModal('cart');
-            }
-          });
-          els.productModal.addEventListener('click', e => {
-            if (e.target === els.productModal) closeModal('product');
-          });
-          els.cartModal.addEventListener('click', e => {
-            if (e.target === els.cartModal) closeModal('cart');
-          });
-          if (els.modalPrev) {
-            els.modalPrev.addEventListener('click', () => changeModalImage(-1));
-          }
-          if (els.modalNext) {
-            els.modalNext.addEventListener('click', () => changeModalImage(1));
-          }
-          if (els.checkoutTabs) {
-            els.checkoutTabs.addEventListener('click', e => {
-              const btn = e.target.closest('button[data-step]');
-              if (!btn) return;
-              const target = Number(btn.dataset.step);
-              if (target === 2 && !validateCustomerInfo()) return;
-              setCheckoutStep(target);
-            });
-          }
-          if (els.checkoutNext) {
-            els.checkoutNext.addEventListener('click', () => setCheckoutStep(1));
-          }
-          if (els.detailsBack) {
-            els.detailsBack.addEventListener('click', () => setCheckoutStep(0));
-          }
-          if (els.detailsNext) {
-            els.detailsNext.addEventListener('click', () => {
-              if (!validateCustomerInfo()) return;
-              setCheckoutStep(2);
-            });
-          }
-          if (els.paymentBack) {
-            els.paymentBack.addEventListener('click', () => setCheckoutStep(1));
-          }
-          if (els.payButton) {
-            els.payButton.addEventListener('click', submitCheckout);
-          }
-          if (els.invoiceQr) {
-            els.invoiceQr.addEventListener('click', copyInvoice);
-            els.invoiceQr.addEventListener('mouseenter', () => {
-              setPaymentStatus('Click QR to copy invoice', false);
-            });
-            els.invoiceQr.addEventListener('mouseleave', () => {
-              setPaymentStatus(
-                state.invoice && state.invoice.request
-                  ? 'Awaiting payment...'
-                  : 'Select a method to continue.',
-                false
-              );
-            });
-          }
-          if (els.invoiceCopyBtn) {
-            els.invoiceCopyBtn.addEventListener('click', e => {
-              e.preventDefault();
-              copyInvoice();
-            });
-          }
-          if (els.detailAddress) {
-            els.detailAddress.addEventListener('input', e => {
-              state.checkoutDetails.address = e.target.value;
-            });
-          }
-          if (els.detailEmail) {
-            els.detailEmail.addEventListener('input', e => {
-              state.checkoutDetails.email = e.target.value;
-            });
-          }
-          if (els.detailNumber) {
-            els.detailNumber.addEventListener('input', e => {
-              state.checkoutDetails.number = e.target.value;
-            });
-          }
-          if (els.methodBitcoin) {
-            els.methodBitcoin.addEventListener('click', () => {
-              state.checkoutMethod = 'bitcoin';
-              updateCheckoutUI();
-            });
-          }
-          if (els.methodFiat) {
-            els.methodFiat.addEventListener('click', () => {
-              if (!isFiatCurrency(state.shop.currency)) {
-                toast('Set a shop currency to enable fiat payments');
-                return;
-              }
-              state.checkoutMethod = 'fiat';
-              updateCheckoutUI();
-            });
-          }
-        }
-
-        async function fetchTags() {
-          if (!state.inventoryId) return;
-          try {
-            const params = new URLSearchParams({
-              limit: 200,
-              offset: 0,
-              sortby: 'created_at',
-              direction: 'desc',
-              is_active: true
-            });
-            const response = await fetch(
-              `/inventory/api/v1/items/${state.inventoryId}/paginated?${params.toString()}`
-            );
-            if (!response.ok) return;
-            const payload = await response.json();
-            const items = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
-            const allowedTags = parseTags(state.shop.allowed_tags);
-            const omitTags = parseTags(state.shop.omit_tags);
-            const tags = ['__all'];
-            items.forEach(item => {
-              const lower = tagsLowerFor(item);
-              lower.forEach(tag => {
-                const allowedOk = !allowedTags.length || allowedTags.includes(tag);
-                const notOmitted = !omitTags.length || !omitTags.includes(tag);
-                if (tag && allowedOk && notOmitted && !tags.includes(tag)) {
-                  tags.push(tag);
-                }
-              });
-            });
-            state.tags = tags;
-            renderTags();
-          } catch (err) {
-            console.error(err);
-          }
-        }
-
-        function openPendingItem() {
-          if (!state.pendingItemId) return;
-          const match = state.products.find(p => p.id === state.pendingItemId);
-          if (match) {
-            openProductModal(match);
-            state.pendingItemId = '';
-          }
-        }
-
-        async function fetchProducts() {
-          if (!state.inventoryId) {
-            state.error = 'No inventory linked to this shop yet.';
-            renderErrors();
-            return;
-          }
-          state.error = '';
-          renderErrors();
-          state.loading = true;
-          renderProducts();
-          try {
-            const params = new URLSearchParams({
-              limit: state.pageSize,
-              offset: Math.max(0, (state.page - 1) * state.pageSize),
-              sortby: 'created_at',
-              direction: 'desc',
-              is_active: true
-            });
-            const activeTag = normalizeTag(state.selectedTag);
-            if (activeTag && activeTag !== '__all') params.set('tags', activeTag);
-            const searchTerm = state.search.trim();
-            if (searchTerm) params.set('search', searchTerm);
-            const response = await fetch(
-              `/inventory/api/v1/items/${state.inventoryId}/paginated?${params.toString()}`
-            );
-            if (!response.ok) throw new Error('Unable to load products.');
-            const payload = await response.json();
-            state.products = Array.isArray(payload.data) ? payload.data.filter(Boolean) : [];
-            state.totalItems = Number(payload.total || 0);
-            filterProducts();
-            openPendingItem();
-          } catch (err) {
-            console.error(err);
-            state.error = 'Could not load products from inventory.';
-            renderErrors();
-          } finally {
-            state.loading = false;
-            renderProducts();
-            if (!state.error) renderErrors();
-          }
-        }
-
-        function renderErrors() {
-          if (!els.error) return;
-          if (state.error) {
-            els.error.style.display = 'block';
-            els.error.textContent = state.error;
-          } else {
-            els.error.style.display = 'none';
-          }
-        }
-
-        function openFromQuery() {
-          const params = new URLSearchParams(window.location.search);
-          const itemId = params.get('item');
-          const tag = params.get('tag');
-          const search = params.get('q');
-          if (tag) state.selectedTag = normalizeTag(tag);
-          if (search) {
-            state.search = search;
-            if (els.search) els.search.value = search;
-          }
-          if (itemId) state.pendingItemId = itemId;
-          if (tag || search || itemId) state.page = 1;
-        }
-
-        function init() {
-          if (state.shop.allow_bitcoin === undefined) state.shop.allow_bitcoin = true;
-          if (state.shop.allow_fiat === undefined) state.shop.allow_fiat = true;
-          setTheme();
-          attachEvents();
-          renderTags();
-          updateRequiredLabels();
-          updateCheckoutUI();
-          renderCart();
-          openFromQuery();
-          fetchTags();
-          fetchProducts();
-        }
-
-        init();
-      })();
     </script>
+    <script src="{{ static_url_for('static', 'vendor/vue.global.prod.js') }}"></script>
+    <script src="{{ static_url_for('static', 'vendor/quasar.umd.prod.js') }}"></script>
+    <script src="{{ static_url_for('webshop/static', path='js/public_page.js') }}"></script>
   </body>
 </html>

@@ -1,0 +1,32 @@
+body {
+  font-family:
+    'Manrope',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: var(--shop-bg, #f6f7f9);
+  margin: 0;
+}
+
+.webshop-layout {
+  background: var(--shop-bg, #f6f7f9);
+  min-height: 100vh;
+}
+
+.product-dialog {
+  min-width: min(92vw, 620px);
+}
+
+.cart-dialog {
+  min-width: min(92vw, 760px);
+}
+
+.invoice-qr {
+  max-width: 220px;
+  cursor: pointer;
+}
+
+.empty-state {
+  padding: 32px 0;
+  text-align: center;
+}
