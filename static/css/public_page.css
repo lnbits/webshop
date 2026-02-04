@@ -23,7 +23,15 @@ body {
 
 .invoice-qr {
   max-width: 220px;
-  cursor: pointer;
+  cursor: default;
+}
+
+.invoice-input .q-field__control {
+  background: #f8f9fb;
+}
+
+.q-dialog__backdrop {
+  background: rgba(0, 0, 0, 0);
 }
 
 .empty-state {

@@ -119,7 +119,7 @@
                 <div
                   v-for="product in filtered"
                   :key="product.id"
-                  class="col-12 col-sm-6 col-md-4 col-lg-3"
+                  class="col-12 col-sm-6 col-md-3 col-lg-3"
                 >
                   <q-card class="product-card column full-height">
                     <q-img
@@ -188,7 +188,7 @@
         </q-page-container>
       </q-layout>
 
-      <q-dialog v-model="showProduct" persistent>
+      <q-dialog v-model="showProduct" persistent position="top">
         <q-card class="product-dialog">
           <q-card-section class="row items-center justify-between">
             <div class="text-h6" v-text="focusedItem?.name || 'Product'"></div>
@@ -246,7 +246,7 @@
         </q-card>
       </q-dialog>
 
-      <q-dialog v-model="showCart" persistent>
+      <q-dialog v-model="showCart" persistent position="top">
         <q-card class="cart-dialog">
           <q-card-section class="row items-center justify-between">
             <div class="text-h6">Checkout</div>
@@ -350,7 +350,10 @@
               </q-step>
 
               <q-step :name="3" title="Payment" icon="credit_card">
-                <div class="row q-col-gutter-sm q-mb-md">
+                <div
+                  v-if="!invoiceText && !invoicePaid"
+                  class="row q-col-gutter-sm q-mb-md justify-center"
+                >
                   <div class="col-12 col-sm-auto" v-if="allowBitcoin">
                     <q-btn
                       outline
@@ -410,28 +413,39 @@
                         :ratio="1"
                         class="invoice-qr rounded-borders"
                         fit="contain"
-                        @click="copyInvoice"
                       ></q-img>
-                    </div>
-                    <div class="text-caption text-grey-6 text-center q-mt-xs">
-                      Click QR to copy invoice
                     </div>
                   </q-card>
                 </div>
-                <div class="row justify-between q-mt-md">
+                <div v-if="invoiceText && !invoicePaid" class="q-mt-md">
+                  <q-card
+                    flat
+                    bordered
+                    class="q-pa-sm bg-white rounded-borders"
+                  >
+                    <div class="text-caption text-grey-6 q-mb-xs">
+                      <span v-text="invoiceLabel"></span>
+                    </div>
+                    <div class="row items-center q-col-gutter-sm">
+                      <div class="col">
+                        <q-input
+                          dense
+                          outlined
+                          readonly
+                          :model-value="invoiceText"
+                          class="invoice-input"
+                          @focus="selectInvoiceText"
+                        ></q-input>
+                      </div>
+                    </div>
+                  </q-card>
+                </div>
+                <div class="row justify-start q-mt-md">
                   <q-btn
                     flat
                     color="primary"
                     label="Back"
                     @click="checkoutStep = 2"
-                  ></q-btn>
-                  <q-btn
-                    unelevated
-                    color="primary"
-                    label="Pay now"
-                    :loading="isPaying"
-                    :disable="!checkoutMethod || !cart.length"
-                    @click="submitCheckout"
                   ></q-btn>
                 </div>
               </q-step>

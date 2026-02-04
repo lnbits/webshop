@@ -125,7 +125,12 @@
           : 'Fiat (Stripe)'
       },
       invoiceQrSrc() {
-        if (!this.invoice || !this.invoice.request || this.invoice.paid)
+        if (
+          !this.invoice ||
+          !this.invoice.request ||
+          this.invoice.paid ||
+          this.invoice.isFiat
+        )
           return ''
         return `/api/v1/qrcode?data=${encodeURIComponent(this.invoice.request)}`
       },
@@ -134,6 +139,9 @@
       },
       invoiceText() {
         return this.invoice?.request || ''
+      },
+      invoiceLabel() {
+        return this.invoice?.isFiat ? 'Payment link' : 'Invoice'
       },
       orderPublicUrl() {
         if (!this.orderId) return ''
@@ -283,6 +291,8 @@
       },
       selectMethod(method) {
         this.checkoutMethod = method
+        if (this.isPaying || this.invoice?.request) return
+        this.submitCheckout()
       },
       goToPayment() {
         if (!this.validateCustomerInfo()) return
@@ -343,25 +353,28 @@
           const data = await response.json()
           this.orderId = data.client_data_id || this.orderId || ''
           const isFiat = Boolean(data.is_fiat)
-          const fiatLink = data.fiat_payment_request || data.payment_request
-          if (data.payment_request || data.fiat_payment_request) {
+          const lightningRequest = data.payment_request || ''
+          const fiatLink = data.fiat_payment_request || ''
+          if (lightningRequest || fiatLink) {
             this.invoice = {
-              request: data.payment_request,
+              request: isFiat ? fiatLink : lightningRequest,
               hash: data.payment_hash,
-              paid: false
+              paid: false,
+              isFiat
             }
             this.startInvoiceWatcher()
             if (isFiat) {
-              const checkoutUrl = fiatLink
-              if (checkoutUrl) {
-                window.open(checkoutUrl, '_blank', 'noopener')
+              if (fiatLink) {
+                window.open(fiatLink, '_blank', 'noopener')
                 this.paymentStatus = 'Redirected to payment provider...'
               } else {
                 this.paymentStatus = 'Missing fiat checkout link.'
               }
             }
           }
-          this.paymentStatus = 'Awaiting payment...'
+          if (!isFiat) {
+            this.paymentStatus = 'Awaiting payment...'
+          }
           Quasar.Notify.create({
             type: 'positive',
             message: 'Order captured. Complete payment to finish.'
@@ -410,11 +423,11 @@
           })
         }
       },
-      copyInvoice() {
-        if (!this.invoiceText) return
-        navigator.clipboard.writeText(this.invoiceText).then(() => {
-          Quasar.Notify.create({type: 'positive', message: 'Invoice copied'})
-        })
+      selectInvoiceText(event) {
+        const input = event?.target
+        if (input && typeof input.select === 'function') {
+          input.select()
+        }
       },
       async fetchTags() {
         if (!this.inventoryId) return
@@ -465,6 +478,8 @@
           .map(t => normalizeTag(t))
           .filter(Boolean)
         this.filtered = this.products.filter(item => {
+          const qty = item?.quantity_in_stock
+          if (typeof qty === 'number' && qty <= 0) return false
           const itemTags = this.tagsLowerFor(item)
           const matchesTag =
             activeTag === '__all' || itemTags.includes(activeTag)
@@ -520,6 +535,15 @@
       showCart(val) {
         if (!val) {
           this.checkoutStep = 1
+          this.checkoutMethod = ''
+          this.paymentStatus = 'Select a method to continue.'
+          this.invoice = null
+          this.orderId = ''
+          if (this.invoiceSocket) {
+            this.invoiceSocket.close()
+            this.invoiceSocket = null
+          }
+          this.checkoutDetails = {address: '', email: '', number: ''}
         }
       }
     },
