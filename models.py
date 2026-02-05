@@ -41,6 +41,23 @@ class Shop(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class PublicShop(BaseModel):
+    id: str
+    name: str
+    primary_color: str
+    secondary_color: str
+    background_color: str | None = None
+    inventory_id: str | None = None
+    currency: str = "sat"
+    allowed_tags: str | None = None
+    omit_tags: str | None = None
+    allow_bitcoin: bool = True
+    allow_fiat: bool = True
+    required_customer_info: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
 class ShopFilters(FilterModel):
     __search_fields__ = [
         "name",

@@ -9,6 +9,7 @@ from lnbits.decorators import check_user_exists
 from lnbits.helpers import template_renderer
 
 from .crud import get_shop_by_id
+from .models import PublicShop
 
 webshop_generic_router = APIRouter()
 
@@ -40,9 +41,7 @@ async def shop_public_page(req: Request, shop_id: str):
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Shop does not exist.")
 
     public_page_name = getattr(shop, "name", "")
-    shop_data = shop.dict()
-    # Remove wallet identifier before sending shop data to the public page
-    shop_data.pop("wallet", None)
+    shop_data = PublicShop(**shop.dict()).dict()
     if shop_data.get("created_at"):
         shop_data["created_at"] = shop_data["created_at"].isoformat()
     if shop_data.get("updated_at"):
