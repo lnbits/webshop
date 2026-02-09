@@ -1164,7 +1164,8 @@
 
     await ensureDependencies(options.baseUrl)
 
-    const shop = options.shop || (await fetchPublicShop(shopId, options.baseUrl))
+    const shop =
+      options.shop || (await fetchPublicShop(shopId, options.baseUrl))
     const embedMode = new URLSearchParams(window.location.search).get('embed')
     const showInvoiceCopy =
       options.showInvoiceCopy === undefined

@@ -59,7 +59,9 @@ For pages served from the same LNbits server (for example via `webpages`), mount
 <div id="lnbits-webshop-<SHOP_ID>"></div>
 <script src="/webshop/static/js/public_page.js"></script>
 <script>
-  WebshopPublicPage.mount('#lnbits-webshop-<SHOP_ID>', {shopId: '<SHOP_ID>'}).catch(console.error);
+  WebshopPublicPage.mount('#lnbits-webshop-<SHOP_ID>', {
+    shopId: '<SHOP_ID>'
+  }).catch(console.error)
 </script>
 ```
 

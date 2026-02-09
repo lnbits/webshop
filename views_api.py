@@ -24,8 +24,8 @@ from .crud import (
 from .models import (
     ClientDataPaymentRequest,  #
     CreateShop,
-    PublicShop,
     PublicClientDataRequest,
+    PublicShop,
     Shop,
     ShopFilters,
 )
