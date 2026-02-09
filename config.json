@@ -3,7 +3,7 @@
   "version": "0.0.7",
   "name": "WebShop",
   "repo": "https://github.com/lnbits/webshop",
-  "short_description": "Embedible web-shop",
+  "short_description": "Embeddable web-shop",
   "description": "",
   "tile": "/webshop/static/image/webshop.png",
   "min_lnbits_version": "1.1.0",

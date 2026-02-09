@@ -344,10 +344,20 @@ window.app = Vue.createApp({
     },
     copyIframe(row) {
       const origin = window.location.origin
-      const src = `${origin}/webshop/${row.id}`
+      const src = `${origin}/webshop/${row.id}?embed=iframe`
       const snippet = `<iframe src="${src}" width="100%" height="900" style="border:0; border-radius:12px;"></iframe>`
       LNbits.utils.copyText(snippet)
       LNbits.utils.notifySuccess('Iframe embed copied')
+    },
+    copyComponent(row) {
+      const snippet =
+        `<div id="lnbits-webshop-${row.id}"></div>\n` +
+        `<script src="/webshop/static/js/public_page.js"></script>\n` +
+        `<script>\n` +
+        `  WebshopPublicPage.mount('#lnbits-webshop-${row.id}', {shopId: '${row.id}'}).catch(console.error);\n` +
+        `</script>`
+      LNbits.utils.copyText(snippet)
+      LNbits.utils.notifySuccess('Component embed copied')
     },
     async fetchInventoryId() {
       try {

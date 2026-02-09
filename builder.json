@@ -2,8 +2,8 @@
   "id": "webshop",
   "name": "WebShop",
   "stub_version": "v0.2.0",
-  "short_description": "Embedible web-shop",
-  "description": "A web shop you can embed in any site via an iframe.",
+  "short_description": "Embeddable web-shop",
+  "description": "A web shop you can embed via iframe or same-origin component.",
   "owner_data": {
     "name": "Shop",
     "editable": true,

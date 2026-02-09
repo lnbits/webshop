@@ -102,6 +102,18 @@
                   flat
                   dense
                   size="xs"
+                  icon="view_quilt"
+                  color="grey"
+                  class="q-mr-sm"
+                  @click="copyComponent(props.row)"
+                >
+                  <q-tooltip>Copy component embed (same-origin)</q-tooltip>
+                </q-btn>
+
+                <q-btn
+                  flat
+                  dense
+                  size="xs"
                   @click="showEditShopForm(props.row)"
                   icon="edit"
                   color="light-blue"

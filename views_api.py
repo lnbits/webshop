@@ -17,12 +17,14 @@ from .crud import (
     create_shop,
     delete_shop,
     get_shop,
+    get_shop_by_id,
     get_shop_paginated,
     update_shop,
 )
 from .models import (
     ClientDataPaymentRequest,  #
     CreateShop,
+    PublicShop,
     PublicClientDataRequest,
     Shop,
     ShopFilters,
@@ -109,6 +111,20 @@ async def api_inventory_status(
         "omit_tags": inventory.get("omit_tags") if inventory else [],
         "currency": inventory.get("currency") if inventory else None,
     }
+
+
+@webshop_api_router.get(
+    "/api/v1/public/shop/{shop_id}",
+    name="Get Public Shop",
+    summary="Get public shop data by id.",
+    response_description="Public shop payload",
+    response_model=PublicShop,
+)
+async def api_get_public_shop(shop_id: str) -> PublicShop:
+    shop = await get_shop_by_id(shop_id)
+    if not shop:
+        raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
+    return PublicShop(**shop.dict())
 
 
 ############################# Shop #############################

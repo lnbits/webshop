@@ -4,6 +4,7 @@ Its functions include:
 
 - Building shops with custom colors and branding
 - Integrating with the Inventory extension for products
+- Embedding as an iframe or same-origin component
 - Accepting both Bitcoin and fiat payments
 - Managing orders with customer info and shipping status
 - Filtering products by tags
