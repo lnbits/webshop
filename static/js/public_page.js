@@ -998,27 +998,37 @@
           console.error(err)
         }
       },
-      filterProducts() {
-        const activeTag = normalizeTag(this.selectedTag)
-        const allowed = parseTags(this.shop.allowed_tags || '')
-          .map(t => normalizeTag(t))
-          .filter(Boolean)
-        const omitList = parseTags(this.shop.omit_tags || '')
-          .map(t => normalizeTag(t))
-          .filter(Boolean)
-        this.filtered = this.products.filter(item => {
-          const qty = item?.quantity_in_stock
-          if (typeof qty === 'number' && qty <= 0) return false
-          const itemTags = this.tagsLowerFor(item)
-          const matchesTag =
-            activeTag === '__all' || itemTags.includes(activeTag)
-          const matchesAllowed =
-            !allowed.length || itemTags.some(t => allowed.includes(t))
-          const itemOmit = this.omitTagsLowerFor(item)
-          const hasOmit =
-            omitList.length && itemOmit.some(t => omitList.includes(t))
-          return matchesTag && matchesAllowed && !hasOmit
-        })
+      buildProductFilterContext() {
+        return {
+          activeTag: normalizeTag(this.selectedTag),
+          allowed: parseTags(this.shop.allowed_tags || '')
+            .map(t => normalizeTag(t))
+            .filter(Boolean),
+          omitList: parseTags(this.shop.omit_tags || '')
+            .map(t => normalizeTag(t))
+            .filter(Boolean)
+        }
+      },
+      isVisibleProduct(item, context) {
+        const qty = item?.quantity_in_stock
+        if (typeof qty === 'number' && qty <= 0) return false
+        const itemTags = this.tagsLowerFor(item)
+        const matchesTag =
+          context.activeTag === '__all' || itemTags.includes(context.activeTag)
+        const matchesAllowed =
+          !context.allowed.length ||
+          itemTags.some(tag => context.allowed.includes(tag))
+        const itemOmit = this.omitTagsLowerFor(item)
+        const hasOmit =
+          context.omitList.length &&
+          itemOmit.some(tag => context.omitList.includes(tag))
+        return matchesTag && matchesAllowed && !hasOmit
+      },
+      filterProducts(items = this.products) {
+        const context = this.buildProductFilterContext()
+        this.filtered = (items || []).filter(item =>
+          this.isVisibleProduct(item, context)
+        )
       },
       async fetchProducts() {
         if (!this.inventoryId) {
@@ -1029,8 +1039,6 @@
         this.loading = true
         try {
           const params = new URLSearchParams({
-            limit: this.pageSize,
-            offset: Math.max(0, (this.page - 1) * this.pageSize),
             sortby: 'created_at',
             direction: 'desc',
             is_active: true
@@ -1039,16 +1047,44 @@
           if (activeTag && activeTag !== '__all') params.set('tags', activeTag)
           const searchTerm = this.search.trim()
           if (searchTerm) params.set('search', searchTerm)
-          const response = await fetch(
-            `/inventory/api/v1/items/${this.inventoryId}/paginated?${params.toString()}`
-          )
-          if (!response.ok) throw new Error('Unable to load products.')
-          const payload = await response.json()
-          this.products = Array.isArray(payload.data)
-            ? payload.data.filter(Boolean)
-            : []
-          this.totalItems = Number(payload.total || 0)
-          this.filterProducts()
+          const context = this.buildProductFilterContext()
+          const pageStart = Math.max(0, (this.page - 1) * this.pageSize)
+          const pageEnd = pageStart + this.pageSize
+          const batchSize = Math.max(this.pageSize * 4, 24)
+          const pageItems = []
+          let visibleCount = 0
+          let offset = 0
+          let totalFetched = Number.POSITIVE_INFINITY
+
+          while (offset < totalFetched) {
+            const paginatedParams = new URLSearchParams(params)
+            paginatedParams.set('limit', String(batchSize))
+            paginatedParams.set('offset', String(offset))
+
+            const response = await fetch(
+              `/inventory/api/v1/items/${this.inventoryId}/paginated?${paginatedParams.toString()}`
+            )
+            if (!response.ok) throw new Error('Unable to load products.')
+            const payload = await response.json()
+            const items = Array.isArray(payload.data)
+              ? payload.data.filter(Boolean)
+              : []
+            totalFetched = Number(payload.total || 0)
+            if (!items.length) break
+
+            items.forEach(item => {
+              if (!this.isVisibleProduct(item, context)) return
+              if (visibleCount >= pageStart && visibleCount < pageEnd) {
+                pageItems.push(item)
+              }
+              visibleCount += 1
+            })
+            offset += items.length
+          }
+
+          this.products = pageItems
+          this.totalItems = visibleCount
+          this.filtered = [...pageItems]
         } catch (err) {
           console.error(err)
           this.error = 'Could not load products from inventory.'
