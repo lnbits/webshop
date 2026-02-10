@@ -2,7 +2,7 @@
 name = "webshop"
 version = "0.0.4"
 requires-python = ">=3.10,<3.13"
-description = "<<Embedible web-shop>>"
+description = "<<Embeddable web-shop>>"
 authors = []
 urls = { Homepage = "https://lnbits.com", Repository = "https://github.com/lnbits/tpos" }
 dependencies = [ "lnbits>1" ]
