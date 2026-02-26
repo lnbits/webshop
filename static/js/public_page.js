@@ -407,12 +407,6 @@
                     label="Back"
                     @click="checkoutStep = 2"
                   ></q-btn>
-                  <q-btn
-                    unelevated
-                    color="primary"
-                    label="Continue"
-                    @click="goToPayment"
-                  ></q-btn>
                 </div>
               </q-step>
 
@@ -508,14 +502,6 @@
                     color="primary"
                     label="Back"
                     @click="checkoutStep = 3"
-                  ></q-btn>
-                  <q-btn
-                    unelevated
-                    color="primary"
-                    label="Pay now"
-                    class="q-ml-sm"
-                    :disable="isPaying || !checkoutMethod"
-                    @click="submitCheckout"
                   ></q-btn>
                 </div>
               </q-step>
@@ -697,6 +683,7 @@
         },
         shipping: {
           available_regions: [],
+          regions: [],
           methods: [],
           region: '',
           method: '',
@@ -752,11 +739,19 @@
       },
       methodOptions() {
         const selected = this.shipping.region
+        const regionRecord = selected
+          ? (this.shipping.regions || []).find(entry =>
+              Array.isArray(entry.regions)
+                ? entry.regions.includes(selected)
+                : false
+            )
+          : null
         const methods = this.shipping.methods || []
         return methods
           .filter(method => {
             if (!selected) return true
-            return !method.regions || method.regions.includes(selected)
+            if (!regionRecord) return false
+            return !method.regions || method.regions.includes(regionRecord.id)
           })
           .map(method => ({
             label: method.title || method.id,
@@ -984,6 +979,8 @@
       },
       selectMethod(method) {
         this.checkoutMethod = method
+        this.goToPayment()
+        this.submitCheckout()
       },
       goToVerify() {
         if (!this.validateCustomerInfo()) return
@@ -1098,6 +1095,9 @@
           if (!response.ok) throw new Error('Unable to load shipping options')
           const payload = await response.json()
           this.shipping.available_regions = payload.available_regions || []
+          this.shipping.regions = Array.isArray(payload.regions)
+            ? payload.regions
+            : []
           this.shipping.methods = Array.isArray(payload.methods)
             ? payload.methods
             : []
