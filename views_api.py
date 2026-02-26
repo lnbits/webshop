@@ -24,8 +24,6 @@ from .crud import (
 from .models import (
     CalculateShippingRequest,
     CalculateShippingResponse,
-    ClientData,
-    ClientDataFilters,
     ClientDataPaymentRequest,  #
     CreateShop,
     PublicClientDataRequest,
@@ -169,6 +167,8 @@ async def api_get_public_shop(shop_id: str) -> PublicShop:
     if not shop:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
     return PublicShop(**shop.dict())
+
+
 ############################# Shipping #############################
 @webshop_api_router.get(
     "/api/v1/get_shipping/{shop_id}",

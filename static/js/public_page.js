@@ -335,7 +335,7 @@
                         </q-item-section>
                         <q-item-section side>
                           <q-item-label
-                            v-text="`${entry.quantity} × ${formatAmount(entry.price, shop.currency)} ${currencyLabel()}`"
+                            v-text="entry.quantity + ' x ' + formatAmount(entry.price, shop.currency) + ' ' + currencyLabel()"
                           ></q-item-label>
                         </q-item-section>
                       </q-item>
