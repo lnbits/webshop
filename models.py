@@ -200,3 +200,45 @@ class OrdersCreatePayload(BaseModel):
 class PublicClientDataRequest(CreateClientData):
     payment_method: str | None = None
     fiat_provider: str | None = None
+
+
+########################### Shipping ############################
+class ShippingMethod(BaseModel):
+    id: str
+    title: str
+    cost_percentage: float
+    regions: list[str]
+
+
+class ShippingRegion(BaseModel):
+    id: str
+    name: str
+    regions: list[str]
+    price: float
+    weight_threshold: int | None
+    price_per_g: float | None
+
+
+class ShippingResponse(BaseModel):
+    available_regions: list[str]
+    methods: list[ShippingMethod]
+    regions: list[ShippingRegion]
+
+
+class CalculateShippingRequest(BaseModel):
+    region: str
+    weight: int
+    method: str | None = None
+
+
+class CalculateShippingResponse(BaseModel):
+    regions_name: str
+    regions: list[str]
+    weight: int
+    base_price: float
+    cost_percentage: float
+    method_fee: float
+    final_price: float
+    currency: str
+    fiat_price: float
+    method_title: str | None

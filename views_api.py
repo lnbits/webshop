@@ -22,10 +22,13 @@ from .crud import (
     update_shop,
 )
 from .models import (
+    CalculateShippingRequest,
+    CalculateShippingResponse,
     ClientDataPaymentRequest,  #
     CreateShop,
     PublicClientDataRequest,
     PublicShop,
+    ShippingResponse,
     Shop,
     ShopFilters,
 )
@@ -58,6 +61,45 @@ def _from_csv(value: str | list[str] | None) -> list[str]:
 
 def _inventory_available_for_user(user: User | None) -> bool:
     return bool(user and "inventory" in (user.extensions or []))
+
+
+def _sanitize_shipping_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    methods = payload.get("methods") or []
+    regions = payload.get("regions") or []
+    for method in methods:
+        if isinstance(method, dict):
+            method.pop("user_id", None)
+    for region in regions:
+        if isinstance(region, dict):
+            region.pop("user_id", None)
+    payload["methods"] = methods
+    payload["regions"] = regions
+    return payload
+
+
+def _sanitize_shipping_quote(payload: dict[str, Any]) -> dict[str, Any]:
+    payload.pop("method_id", None)
+    payload.pop("regions_id", None)
+    return payload
+
+
+async def _shipping_request(
+    user_id: str,
+    method: str,
+    path: str,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    access = create_access_token({"sub": "", "usr": user_id}, token_expire_minutes=1)
+    async with httpx.AsyncClient() as client:
+        resp = await client.request(
+            method,
+            url=f"http://{settings.host}:{settings.port}/shipping/api/v1/{path}",
+            headers={"Authorization": f"Bearer {access}"},
+            json=payload,
+        )
+    if resp.status_code >= 400:
+        raise HTTPException(HTTPStatus.BAD_REQUEST, "Shipping service error.")
+    return resp.json() if resp.content else {}
 
 
 async def _get_default_inventory(user_id: str) -> dict[str, Any] | None:
@@ -125,6 +167,45 @@ async def api_get_public_shop(shop_id: str) -> PublicShop:
     if not shop:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
     return PublicShop(**shop.dict())
+
+
+############################# Shipping #############################
+@webshop_api_router.get(
+    "/api/v1/get_shipping/{shop_id}",
+    name="Get Shipping",
+    summary="Get shipping regions and methods for a shop.",
+    response_model=ShippingResponse,
+)
+async def api_get_shipping(shop_id: str) -> ShippingResponse:
+    shop = await get_shop_by_id(shop_id)
+    if not shop:
+        raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
+    payload = await _shipping_request(shop.user_id, "GET", "get_regions")
+    sanitized = _sanitize_shipping_payload(payload)
+    return ShippingResponse(**sanitized)
+
+
+@webshop_api_router.post(
+    "/api/v1/calculate_shipping/{shop_id}",
+    name="Calculate Shipping",
+    summary="Calculate shipping price for a shop.",
+    response_model=CalculateShippingResponse,
+)
+async def api_calculate_shipping(
+    shop_id: str,
+    data: CalculateShippingRequest,
+) -> CalculateShippingResponse:
+    shop = await get_shop_by_id(shop_id)
+    if not shop:
+        raise HTTPException(HTTPStatus.NOT_FOUND, "Shop not found.")
+    payload = await _shipping_request(
+        shop.user_id,
+        "POST",
+        "calculate_price",
+        payload=data.dict(),
+    )
+    sanitized = _sanitize_shipping_quote(payload)
+    return CalculateShippingResponse(**sanitized)
 
 
 ############################# Shop #############################

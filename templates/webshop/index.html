@@ -147,15 +147,37 @@
       </q-card-section>
     </q-card>
 
-    <div class="q-mt-lg">
-      <span class="text-h5">Orders</span>
-    </div>
-    <q-card class="q-mt-xs">
+    <q-card class="q-mt-lg">
       <q-card-section>
-        <p class="q-mb-none">
-          Orders are managed in the Orders extension. Enable it to view and
-          process webshop orders.
-        </p>
+        <div class="q-mt-md">
+          <div class="text-caption q-mb-xs">
+            The extension needs 3 other extensions to run properly:
+          </div>
+          <div class="row items-center q-gutter-x-sm q-mb-xs">
+            <q-icon
+              :name="g.extensions.includes('inventory') ? 'check_circle' : 'cancel'"
+              :color="g.extensions.includes('inventory') ? 'green' : 'red'"
+              size="18px"
+            ></q-icon>
+            <span>Inventory Extension</span>
+          </div>
+          <div class="row items-center q-gutter-x-sm q-mb-xs">
+            <q-icon
+              :name="g.extensions.includes('shipping') ? 'check_circle' : 'cancel'"
+              :color="g.extensions.includes('shipping') ? 'green' : 'red'"
+              size="18px"
+            ></q-icon>
+            <span>Shipping Extension</span>
+          </div>
+          <div class="row items-center q-gutter-x-sm">
+            <q-icon
+              :name="g.extensions.includes('orders') ? 'check_circle' : 'cancel'"
+              :color="g.extensions.includes('orders') ? 'green' : 'red'"
+              size="18px"
+            ></q-icon>
+            <span>Orders Extension</span>
+          </div>
+        </div>
       </q-card-section>
     </q-card>
   </div>

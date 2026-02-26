@@ -289,6 +289,25 @@
                   label="Phone"
                   :hint="requiredLabel('number')"
                 ></q-input>
+                <q-select
+                  filled
+                  v-model="shipping.region"
+                  label="Region"
+                  :options="regionOptions"
+                  emit-value
+                  map-options
+                  :disable="!regionOptions.length"
+                  class="q-mt-sm"
+                ></q-select>
+                <q-select
+                  filled
+                  v-model="shipping.method"
+                  label="Shipping method"
+                  :options="methodOptions"
+                  emit-value
+                  map-options
+                  :disable="!methodOptions.length"
+                ></q-select>
                 <div class="row justify-between q-mt-md">
                   <q-btn
                     flat
@@ -300,16 +319,67 @@
                     unelevated
                     color="primary"
                     label="Continue"
-                    @click="goToPayment"
+                    @click="goToVerify"
                   ></q-btn>
                 </div>
               </q-step>
 
-              <q-step :name="3" title="Payment" icon="credit_card">
-                <div
-                  v-if="!invoiceText && !invoicePaid"
-                  class="row q-col-gutter-sm q-mb-md justify-center"
-                >
+              <q-step :name="3" title="Verify" icon="fact_check">
+                <q-card flat bordered class="q-mb-md">
+                  <q-card-section>
+                    <div class="text-subtitle2 q-mb-sm">Items</div>
+                    <q-list separator>
+                      <q-item v-for="entry in orderItems" :key="entry.id">
+                        <q-item-section>
+                          <q-item-label v-text="entry.name"></q-item-label>
+                        </q-item-section>
+                        <q-item-section side>
+                          <q-item-label
+                            v-text="entry.quantity + ' x ' + formatAmount(entry.price, shop.currency) + ' ' + currencyLabel()"
+                          ></q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-card-section>
+                </q-card>
+
+                <q-card flat bordered class="q-mb-md">
+                  <q-card-section>
+                    <div class="text-subtitle2 q-mb-sm">Details</div>
+                    <div class="text-caption">
+                      Address: <span v-text="checkoutDetails.address || '—'"></span>
+                    </div>
+                    <div class="text-caption">
+                      Email: <span v-text="checkoutDetails.email || '—'"></span>
+                    </div>
+                    <div class="text-caption">
+                      Phone: <span v-text="checkoutDetails.number || '—'"></span>
+                    </div>
+                    <div class="text-caption">
+                      Region: <span v-text="shipping.region || '—'"></span>
+                    </div>
+                    <div class="text-caption">
+                      Method: <span v-text="selectedMethodTitle || '—'"></span>
+                    </div>
+                  </q-card-section>
+                </q-card>
+
+                <q-card flat bordered class="q-mb-md">
+                  <q-card-section>
+                    <div class="text-subtitle2 q-mb-sm">Totals</div>
+                    <div class="text-caption">
+                      Items: <span v-text="itemsTotalLabel"></span>
+                    </div>
+                    <div class="text-caption">
+                      Shipping: <span v-text="shippingTotalLabel"></span>
+                    </div>
+                    <div class="text-weight-bold q-mt-xs">
+                      Final: <span v-text="cartTotalLabel"></span>
+                    </div>
+                  </q-card-section>
+                </q-card>
+
+                <div class="row q-col-gutter-sm q-mb-md justify-center">
                   <div class="col-12 col-sm-auto" v-if="allowBitcoin">
                     <q-btn
                       outline
@@ -327,6 +397,26 @@
                       :class="{'is-active': checkoutMethod === 'fiat'}"
                       @click="selectMethod('fiat')"
                     ></q-btn>
+                  </div>
+                </div>
+
+                <div class="row justify-between q-mt-md">
+                  <q-btn
+                    flat
+                    color="primary"
+                    label="Back"
+                    @click="checkoutStep = 2"
+                  ></q-btn>
+                </div>
+              </q-step>
+
+              <q-step :name="4" title="Payment" icon="credit_card">
+                <div
+                  v-if="!invoiceText && !invoicePaid"
+                  class="row q-col-gutter-sm q-mb-md justify-center"
+                >
+                  <div class="text-caption text-grey-6">
+                    Review the invoice and complete payment.
                   </div>
                 </div>
 
@@ -411,7 +501,7 @@
                     flat
                     color="primary"
                     label="Back"
-                    @click="checkoutStep = 2"
+                    @click="checkoutStep = 3"
                   ></q-btn>
                 </div>
               </q-step>
@@ -591,6 +681,16 @@
           email: '',
           number: ''
         },
+        shipping: {
+          available_regions: [],
+          regions: [],
+          methods: [],
+          region: '',
+          method: '',
+          quote: null,
+          loading: false,
+          error: ''
+        },
         orderId: '',
         ordersBaseUrl: ordersBaseUrl || window.location.origin,
         showInvoiceCopy,
@@ -616,8 +716,71 @@
           0
         )
       },
+      shippingCost() {
+        return Number(this.shipping?.quote?.final_price) || 0
+      },
+      totalWithShipping() {
+        return this.cartTotal + this.shippingCost
+      },
       cartTotalLabel() {
+        return `${formatAmount(this.totalWithShipping, this.shop.currency)} ${this.currencyLabel()}`
+      },
+      itemsTotalLabel() {
         return `${formatAmount(this.cartTotal, this.shop.currency)} ${this.currencyLabel()}`
+      },
+      shippingTotalLabel() {
+        return `${formatAmount(this.shippingCost, this.shop.currency)} ${this.currencyLabel()}`
+      },
+      regionOptions() {
+        return (this.shipping.available_regions || []).map(region => ({
+          label: region,
+          value: region
+        }))
+      },
+      methodOptions() {
+        const selected = this.shipping.region
+        const regionRecord = selected
+          ? (this.shipping.regions || []).find(entry =>
+              Array.isArray(entry.regions)
+                ? entry.regions.includes(selected)
+                : false
+            )
+          : null
+        const methods = this.shipping.methods || []
+        return methods
+          .filter(method => {
+            if (!selected) return true
+            if (!regionRecord) return false
+            return !method.regions || method.regions.includes(regionRecord.id)
+          })
+          .map(method => ({
+            label: method.title || method.id,
+            value: method.id
+          }))
+      },
+      selectedMethodTitle() {
+        const method = (this.shipping.methods || []).find(
+          entry => entry.id === this.shipping.method
+        )
+        return method?.title || ''
+      },
+      orderItems() {
+        const items = this.cart.map(entry => ({
+          id: entry.id,
+          name: entry.name,
+          quantity: entry.quantity,
+          price: entry.price,
+          weight_grams: entry.weight_grams
+        }))
+        if (this.shippingCost > 0) {
+          items.push({
+            id: 'shipping',
+            name: 'Shipping Item',
+            quantity: 1,
+            price: this.shippingCost
+          })
+        }
+        return items
       },
       allowBitcoin() {
         return this.shop.allow_bitcoin !== false
@@ -770,6 +933,12 @@
           this.cart = this.cart.filter(i => i.id !== id)
         }
       },
+      cartWeight() {
+        return this.cart.reduce((sum, item) => {
+          const weight = Number(item.weight_grams) || 0
+          return sum + weight * item.quantity
+        }, 0)
+      },
       requiredFields() {
         return parseTags(this.shop.required_customer_info || '').map(t =>
           t.toLowerCase()
@@ -797,14 +966,38 @@
         }
         return true
       },
+      validateShippingSelection() {
+        if (!this.shipping.available_regions.length) return true
+        if (!this.shipping.region || !this.shipping.method) {
+          Quasar.Notify.create({
+            type: 'warning',
+            message: 'Select a shipping region and method'
+          })
+          return false
+        }
+        return true
+      },
       selectMethod(method) {
         this.checkoutMethod = method
-        if (this.isPaying || this.invoice?.request) return
+        this.goToPayment()
         this.submitCheckout()
+      },
+      goToVerify() {
+        if (!this.validateCustomerInfo()) return
+        if (!this.validateShippingSelection()) return
+        this.checkoutStep = 3
       },
       goToPayment() {
         if (!this.validateCustomerInfo()) return
-        this.checkoutStep = 3
+        if (!this.validateShippingSelection()) return
+        if (!this.checkoutMethod) {
+          Quasar.Notify.create({
+            type: 'warning',
+            message: 'Select a payment method'
+          })
+          return
+        }
+        this.checkoutStep = 4
       },
       async submitCheckout() {
         if (!this.checkoutMethod) {
@@ -819,6 +1012,7 @@
           return
         }
         if (!this.validateCustomerInfo()) return
+        if (!this.validateShippingSelection()) return
 
         this.isPaying = true
         this.paymentStatus = 'Creating order...'
@@ -833,13 +1027,7 @@
             address: this.checkoutDetails.address || null,
             email: this.checkoutDetails.email || null,
             number: this.checkoutDetails.number || null,
-            items: this.cart.map(entry => ({
-              id: entry.id,
-              name: entry.name,
-              quantity: entry.quantity,
-              price: entry.price,
-              weight_grams: entry.weight_grams
-            })),
+            items: this.orderItems,
             payment_method: this.checkoutMethod,
             fiat_provider:
               this.checkoutMethod === 'fiat'
@@ -898,6 +1086,67 @@
           this.isPaying = false
         }
       },
+      async fetchShippingOptions() {
+        if (!this.shopId) return
+        try {
+          const response = await fetch(
+            `/webshop/api/v1/get_shipping/${this.shopId}`
+          )
+          if (!response.ok) throw new Error('Unable to load shipping options')
+          const payload = await response.json()
+          this.shipping.available_regions = payload.available_regions || []
+          this.shipping.regions = Array.isArray(payload.regions)
+            ? payload.regions
+            : []
+          this.shipping.methods = Array.isArray(payload.methods)
+            ? payload.methods
+            : []
+          if (
+            !this.shipping.region &&
+            this.shipping.available_regions.length === 1
+          ) {
+            this.shipping.region = this.shipping.available_regions[0]
+          }
+        } catch (err) {
+          console.error(err)
+        }
+      },
+      scheduleShippingQuote() {
+        clearTimeout(this._shippingTimer)
+        this._shippingTimer = setTimeout(() => {
+          this.updateShippingQuote()
+        }, 200)
+      },
+      async updateShippingQuote() {
+        if (!this.shipping.region || !this.shipping.method) {
+          this.shipping.quote = null
+          return
+        }
+        const weight = this.cartWeight()
+        this.shipping.loading = true
+        try {
+          const response = await fetch(
+            `/webshop/api/v1/calculate_shipping/${this.shopId}`,
+            {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                region: this.shipping.region,
+                weight,
+                method: this.shipping.method
+              })
+            }
+          )
+          if (!response.ok) throw new Error('Unable to calculate shipping')
+          const payload = await response.json()
+          this.shipping.quote = payload
+        } catch (err) {
+          console.error(err)
+          this.shipping.quote = null
+        } finally {
+          this.shipping.loading = false
+        }
+      },
       startInvoiceWatcher() {
         if (!this.invoice?.hash) return
         if (this.invoiceSocket) {
@@ -916,7 +1165,7 @@
               this.invoice.paid = true
               this.paymentStatus = 'Payment received.'
               this.cart = []
-              this.checkoutStep = 3
+              this.checkoutStep = 4
               ws.close()
             }
           })
@@ -1110,11 +1359,28 @@
           }
           this.checkoutDetails = {address: '', email: '', number: ''}
         }
+      },
+      cart: {
+        deep: true,
+        handler() {
+          this.scheduleShippingQuote()
+        }
+      },
+      'shipping.region': function () {
+        const allowed = this.methodOptions.map(option => option.value)
+        if (this.shipping.method && !allowed.includes(this.shipping.method)) {
+          this.shipping.method = ''
+        }
+        this.scheduleShippingQuote()
+      },
+      'shipping.method': function () {
+        this.scheduleShippingQuote()
       }
     },
     mounted() {
       if (this.shop.allow_bitcoin === undefined) this.shop.allow_bitcoin = true
       if (this.shop.allow_fiat === undefined) this.shop.allow_fiat = true
+      this.fetchShippingOptions()
       this.fetchTags()
       this.fetchProducts()
     }
