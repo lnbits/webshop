@@ -5,8 +5,7 @@ async def m001_shop(db: Database):
     """
     Initial shop table.
     """
-    await db.execute(
-        f"""
+    await db.execute(f"""
         CREATE TABLE webshop.shop (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -25,16 +24,14 @@ async def m001_shop(db: Database):
             created_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now},
             updated_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now}
         );
-        """
-    )
+        """)
 
 
 async def m002_drop_client_data(db: Database):
     """
     Initial client_data table.
     """
-    await db.execute(
-        f"""
+    await db.execute(f"""
         CREATE TABLE webshop.client_data (
             id TEXT PRIMARY KEY,
             shop_id TEXT NOT NULL,
@@ -49,5 +46,4 @@ async def m002_drop_client_data(db: Database):
             created_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now},
             updated_at TIMESTAMP NOT NULL DEFAULT {db.timestamp_now}
         );
-        """
-    )
+        """)
