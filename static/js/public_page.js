@@ -269,7 +269,7 @@
                 </div>
               </q-step>
 
-              <q-step :name="2" title="Details" icon="local_shipping">
+              <q-step :name="2" title="Details" icon="local_shipping" class="q-gutter-sm">
                 <q-input
                   filled
                   v-model.trim="checkoutDetails.address"
