@@ -270,6 +270,7 @@
               </q-step>
 
               <q-step :name="2" title="Details" icon="local_shipping">
+              <div class="q-gutter-sm">
                 <q-input
                   filled
                   v-model.trim="checkoutDetails.address"
@@ -321,6 +322,7 @@
                     label="Continue"
                     @click="goToVerify"
                   ></q-btn>
+                </div>
                 </div>
               </q-step>
 
